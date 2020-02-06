@@ -5,8 +5,8 @@ def benchMarkFunc(position):
     ## Rosenbrock function
     a = 0
     ## No idea if b value should be set to 100
-    b = 100
-    return (position[0]**2 + (b *(position[1] - position[0]**2)**2))
+    b1 = 100
+    return (position[0]**2 + (b1 *(position[1] - position[0]**2)**2))
 
 ## initialising variables for particle action
 weightAHigh = 0.9
