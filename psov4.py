@@ -52,7 +52,7 @@ for iterations in range(numOfIterations):
 
     for i in range(numOfParticles):
         newVelocity = (a*particleVel[i] + (b * random.random()) * (particleBestPos[i] - particlePos[i]) + (c * random.random()) * (globalBestPos - particlePos[i]))
-        newPosition = newVelocity + particlePos [i]
+        newPosition = newVelocity + particlePos[i]
         particlePos[i] = newPosition
 
 print("Global Best Position: ", globalBestPos, " with iteration number ", iterations)
