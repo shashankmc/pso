@@ -9,12 +9,15 @@ a = 0.9
 b = 2
 c = 2
 
-vMax = 0.25
+vMax = 1
 
 tick = 0
 globalBest = 2000
 globalBestLocation = np.array([1, 1])
 particleList = []
+
+#not yet done, needs to be tuples
+resultMemoryList =[]
 
 
 def rosenbrock(x, y):
@@ -82,7 +85,9 @@ def limitVMax(velocity: np.array):
     for val in velocity:
         vectorSum = vectorSum + val ** 2
 
-    velocity = velocity * (vMax / np.math.sqrt(vectorSum))
+    if vectorSum > vMax:
+        velocity = velocity * (vMax / np.math.sqrt(vectorSum))
+
     return velocity
 
 
@@ -101,12 +106,13 @@ def update():
 
     print("Distance to Best: " + str(distToBestSum))
     # every tenth iteration a display
-    if tick % 100 == 0:
+    if tick % 10 == 0:
         a = a / 1.1
         display()
 
 
 def display():
+    global resultMemoryList
     # creates an array from -2 to 2 with 100 steps
     x = np.linspace(-2, 2, 100)
     y = np.linspace(-1, 3, 100)
@@ -125,17 +131,17 @@ def display():
 
     # Iterates over particle and adds a dot to ax for each current location location
     for particle in particleList:
-        #ax.scatter(particle.location[0], particle.location[1], 2000, c='r', marker='x')
-        ax.scatter(particle.location[0], particle.location[1],
-                   rosenbrock(particle.location[0], particle.location[1]),
-                   c='r', marker='x')
+        ax.scatter(particle.location[0], particle.location[1], 2000, c='r', marker='x')
+        #ax.scatter(particle.location[0], particle.location[1],
+        #           rosenbrock(particle.location[0], particle.location[1]),
+        #           c='r', marker='x')
 
     plt.show()
 
 
-initSwarm(100, -2, 2, -1, 3)
+initSwarm(10, -2, 2, -1, 3)
 
-for i in range(1000):
+for i in range(100):
     update()
 
 display()
