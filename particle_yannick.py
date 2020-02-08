@@ -6,10 +6,11 @@ class Particle:
     bestLocation = []
     bestValue = 2000
 
-    def __init__(self, startLoc:[], startVelo:[]):
+    def __init__(self, startLoc:[], startVelo:[], bestLoc:[], bestVal):
         self.location = np.asarray(startLoc)
         self.velocity = np.asarray(startVelo)
-        self.bestLocation = np.asarray(startVelo)
+        self.bestLocation = np.asarray(bestLoc)
+        self.bestValue = bestVal
 
     def __str__(self):
         msg = " Particle:\n"
