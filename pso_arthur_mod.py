@@ -190,7 +190,7 @@ def display():
 
     # plt.show()
     ax.view_init(60,35)
-    if(tick % 10 == 0):
+    if(tick % 100 == 0):
         plt.savefig('fig%d.png' %tick)
     plt.pause(0.001)
 usedfunction = rosenbrock
