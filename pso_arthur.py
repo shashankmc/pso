@@ -16,25 +16,29 @@ globalBest = 2000
 globalBestLocation = np.array([1, 1])
 particleList = []
 
+
 def rosenbrock(x, y):
     ar = 0
     br = 100
     result = (ar - x) ** 2 + br * (y - x ** 2) ** 2
     return result
 
-def rastrigin_easy(x,y):
+
+def rastrigin_easy(x, y):
     n = 2
     sum = 10 * n
     sum += (x ** 2 - 10 * np.cos(2 * np.pi * x))
     sum += (y ** 2 - 10 * np.cos(2 * np.pi * y))
-    return sum 
+    return sum
+
 
 def rastrigin(x):
-    n = len(x) 
+    n = len(x)
     sum = 10 * n
-    for i in range(0,n):
+    for i in range(0, n):
         sum += (x[i] ** 2 - 10 * np.cos(2 * np.pi * x))
-    return sum 
+    return sum
+
 
 def initSwarm(numPart: int, xMin: float, xMax: float, yMin: float, yMax: float):
     global particleList
@@ -84,7 +88,7 @@ def updateParticle(particle: Particle):
     error = np.sqrt((particle.location[0] - globalBestLocation[0]) ** 2
                     + (particle.location[1] - globalBestLocation[1]) ** 2)
 
-    #print("single error: " + str(error))
+    # print("single error: " + str(error))
     return error
 
 
@@ -108,25 +112,26 @@ def update():
     global distToBestSum
     distToBestSum = 0
 
-    #print("tick value: " + str(tick) + ", a = " + str(a))
-    #print("Globalbest position: " + str(globalBestLocation) + ", globalBest: " + str(globalBest))
+    # print("tick value: " + str(tick) + ", a = " + str(a))
+    # print("Globalbest position: " + str(globalBestLocation) + ", globalBest: " + str(globalBest))
     # update every particle
     for particle in particleList:
         distToBestSum = distToBestSum + updateParticle(particle)
 
-    #print("Distance to Best: " + str(distToBestSum))
+    # print("Distance to Best: " + str(distToBestSum))
     # every tenth iteration a display
     if tick % 100 == 0:
         a = a / 1.1
-        #display()
+        # display()
 
-def gradient_decend(decendrate, tolerance, xMin, xMax, yMin, yMax):     
+
+def gradient_decend(decendrate, tolerance, xMin, xMax, yMin, yMax):
     currentx = random.randrange(xMin, xMax)
     currenty = random.randrange(yMin, yMax)
     currentvalue = usedfunction(currentx, currenty)
 
-    while True: 
-        if (decendrate<=tolerance):
+    while True:
+        if (decendrate <= tolerance):
             break
 
         direction = 1
@@ -142,19 +147,19 @@ def gradient_decend(decendrate, tolerance, xMin, xMax, yMin, yMax):
             bestnext = usedfunction(currentx, currenty - decendrate)
         if (bestnext > currentvalue):
             decendrate /= 2
-        else: 
-            if (direction==1):
+        else:
+            if (direction == 1):
                 currentx += decendrate
-                currentvalue = usedfunction(currentx,currenty)
-            elif (direction==2):
+                currentvalue = usedfunction(currentx, currenty)
+            elif (direction == 2):
                 currentx -= decendrate
                 currentvalue = usedfunction(currentx, currenty)
-            elif (direction==3):
+            elif (direction == 3):
                 currenty += decendrate
-                currentvalue = usedfunction(currentx,currenty)
-            elif (direction==4):
+                currentvalue = usedfunction(currentx, currenty)
+            elif (direction == 4):
                 currenty -= decendrate
-                currentvalue = usedfunction(currentx,currenty)
+                currentvalue = usedfunction(currentx, currenty)
     print("Position: [" + str(currentx) + "," + str(currenty) + "]")
     print("Value: " + str(currentvalue))
 
@@ -178,22 +183,23 @@ def display():
 
     # Iterates over particle and adds a dot to ax for each current location location
     for particle in particleList:
-        #ax.scatter(particle.location[0], particle.location[1], 2000, c='r', marker='x')
+        # ax.scatter(particle.location[0], particle.location[1], 2000, c='r', marker='x')
         ax.scatter(particle.location[0], particle.location[1],
                    usedfunction(particle.location[0], particle.location[1]),
                    c='r', marker='x')
 
     plt.show()
 
-usedfunction = rosenbrock
 
-#initSwarm(100, -2, 2, -1, 3)
+usedfunction = rastrigin_easy
 
-#for i in range(1000):
-#    update()
-#    print("iteration: " + str(i)) 
+initSwarm(100, -2, 2, -1, 3)
 
-#print("Global Best: " + str(globalBestLocation))
-#print("Average Error: " + str(distToBestSum/100.))
-#display()
-gradient_decend(10,0.0001,-2,2,-1,3)
+for i in range(1000):
+    update()
+    print("iteration: " + str(i))
+
+print("Global Best: " + str(globalBestLocation))
+print("Average Error: " + str(distToBestSum / 100.))
+display()
+# gradient_decend(10,0.0001,-2,2,-1,3)
