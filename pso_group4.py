@@ -110,6 +110,7 @@ def updateParticle(particle: Particle):
                  + b * R1 * (particle.bestLocation - particle.location) \
                  + c * R2 * (globalBestLocation - particle.location)
     particle.velocity = limitVMax(unlimitedV)
+    # particle.velocity = unlimitedV
     # location function from the script
     particle.location = particle.location + particle.velocity * 1
     # if new local best => update local best
@@ -157,8 +158,8 @@ def display():
     global globalBestLocation
     global globalBest
     # creates an array from -2 to 2 with 100 steps
-    x = np.linspace(-4, 4, 100)
-    y = np.linspace(-1, 3, 100)
+    x = np.linspace(-15, 15, 100)
+    y = np.linspace(-3, 3, 100)
 
     # this meshgrid transform needed for plot
     xx, yy = np.meshgrid(x, y)
@@ -185,9 +186,9 @@ def display():
     plt.pause(0.001)
 
 
-usedfunction = rosenbrock
-# usedfunction = rastrigin_easy
-initSwarm(100, -4, 4, -1, 3)
+# usedfunction = rosenbrock
+usedfunction = rastrigin_easy
+initSwarm(100, -15, 15, -3, 3)
 for i in range(1000):
     update()
     #print("iteration: " + str(i)) 
