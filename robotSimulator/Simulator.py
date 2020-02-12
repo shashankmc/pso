@@ -1,5 +1,7 @@
 import time
 from pynput.keyboard import Key, Listener
+import pygame
+import random
 
 from Obstacle import Obstacle
 from Robot import Robot
@@ -39,6 +41,36 @@ def update():
 def display():
     print("display")
 
+
+
+# this function is to display the frame for the simulation
+def initDisplay():
+    # initiates pygame for the simulation of an object
+    pygame.init()
+    # set the screen size as per requirement
+    screen = pygame.display.set_mode((640, 480))
+    # empty the background -- this needs to be set only initially. This is here for current run
+    background = pygame.Surface(screen.get_size())
+    # make the background white in color
+    background.fill((255, 255, 255))
+    # convert the background with the provided settings and display with the necessary objects
+    background.convert()
+    # the circle created will represent the object or robot which will move based on key inputs
+    # the parameters for drawing a circle are these - (Surface, color, pos, radius, width=0)
+    pygame.draw.circle(background, (0, 200, 0), (25,25), 25)
+    # the function blit creates the initially drawing based on the settings
+    screen.blit(background, (0, 0))
+    waitForInput = True
+    FPS = 30
+    # once the display is put up in front of the user
+    # pygame module waits for key strokes from the user
+    while waitForInput:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                waitForInput = False
+            elif event.type == pygame.K_q:
+                waitForInput = False                
+        pygame.display.flip()
 
 def calculateNextPosition():
     checkCollision()
@@ -81,6 +113,8 @@ def on_release(key):
         return False
 
 
-init()
-while keepRunning:
-    update()
+initDisplay()
+#init()
+# while keepRunning:
+#    update()
+pygame.quit()
