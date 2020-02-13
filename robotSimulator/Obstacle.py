@@ -5,9 +5,8 @@ class Obstacle:
     startLoc = []
     endLoc = []
 
-
     def __init__(self, startLoc: [], endLoc: []):
-        self.location = np.asarray(startLoc)
+        self.startLoc = np.asarray(startLoc)
         self.endLoc = np.asarray(endLoc)
 
     def __str__(self):
