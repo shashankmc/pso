@@ -15,10 +15,13 @@ pygame.init()
 screen = pygame.display.set_mode((640, 480))
 
 background : any
+clock: any
+FPS = 30
 
 
 def init():
     global robot
+    global clock
     global background
 
     print("init")
@@ -43,18 +46,22 @@ def init():
     # the function blit creates the initially drawing based on the settings
     screen.blit(background, (0, 0))
     FPS = 30
+    clock = pygame.time.Clock()
+
 
     print("init end")
 
 
 def update():
-    global timeTick
+
+    global clock
     global tickRate
     global robot
     global obstacleList
+    global FPS
 
-    timeTick = timeTick + 1
-    #print("Update: " + str(timeTick))
+    clock.tick(FPS)
+    print(clock)
 
     pygame.display.flip()
     for event in pygame.event.get():
