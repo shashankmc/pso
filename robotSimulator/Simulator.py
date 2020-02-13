@@ -1,18 +1,22 @@
 from pygame.locals import *
 import pygame
 
-from robotSimulator.Obstacle import Obstacle
-from robotSimulator.Robot import Robot
+from Obstacle import Obstacle
+from Robot import Robot
 
 keepRunning = True
 timeTick = 0
 tickRate = 13.0
 robot: Robot
 obstacleList = []
+screenWidth = 640
+screenHeight = 480
+circleRadius = 20
+changePos = circleRadius
 # initiates pygame for the simulation of an object
 pygame.init()
 # set the screen size as per requirement
-screen = pygame.display.set_mode((640, 480))
+screen = pygame.display.set_mode((screenWidth, screenHeight))
 
 background : any
 clock: any
@@ -38,11 +42,12 @@ def init():
     background.fill((255, 255, 255))
     # convert the background with the provided settings and display with the necessary objects
     background.convert()
-    x = 25
-    y = 25
+    # setting the initial position
+    x = circleRadius
+    y = circleRadius
     # the circle created will represent the object or robot which will move based on key inputs
     # the parameters for drawing a circle are these - (Surface, color, pos, radius, width=0)
-    pygame.draw.circle(background, (0, 200, 0), (x, y), 25)
+    pygame.draw.circle(background, (0, 200, 0), (x, y), circleRadius)
     # the function blit creates the initially drawing based on the settings
     screen.blit(background, (0, 0))
     FPS = 30
@@ -62,54 +67,54 @@ def update():
 
     clock.tick(FPS)
     print(clock)
-
     pygame.display.flip()
+    
     for event in pygame.event.get():
         if event.type == pygame.KEYDOWN:
-            handleInput(event.key)
+            handleInput()
 
     move()
 
-def handleInput(key):
+def handleInput():
     global keepRunning
-    if key == K_ESCAPE:
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_ESCAPE]:
         keepRunning = False
         return
-    if key == K_d:
+    if keys[pygame.K_d] and robot.location[0] < screenWidth - (2 * circleRadius):
         print('You just pressed d')
-        x_change = 25
         # x_change = calcBounds(x, x_change, 'x')
-        robot.location[0] += x_change
+        robot.location[0] += changePos
         return
-    if key == K_w:
+    if keys[pygame.K_w] and robot.location[1] > changePos:
         print('You just pressed w')
         print("positive increment of left wheel motor speed")
-        y_change = -25
+        # y_change = -25
         # y_change = calcBounds(y, y_change, 'y')
-        robot.location[1] += y_change
+        robot.location[1] -= changePos
         return
-    if key == K_a:
+    if keys[pygame.K_a] and robot.location[0] > changePos:
         print('You just pressed a')
-        x_change = -25
+        # x_change = -25
         # x_change = calcBounds(x, x_change, 'x')
-        robot.location[0] += x_change
+        robot.location[0] -= changePos
         return
-    if key == K_s:
+    if keys[pygame.K_s] and robot.location[1] < screenHeight - (2 * circleRadius):
         print('You have pressed s')
         print("negative increment of left wheel motor speed")
-        y_change = 25
+        # y_change = 25
         # y_change = calcBounds(y, y_change, 'y')
-        robot.location[1] += y_change
+        robot.location[1] += changePos
         return
-    if key == K_o:
+    if keys[pygame.K_o]:
         print("positive increment of right wheel motor speed")
-    if key == K_l:
+    if keys[pygame.K_l]:
         print("negative increment of right wheel motor speed")
-    if key == K_x:
+    if keys[pygame.K_x]:
         print("both motor speeds are zero")
-    if key == K_t:
+    if keys[pygame.K_t]:
         print("positive increment of both wheels’ motor speed")
-    if key == K_g:
+    if keys[pygame.K_g]:
         print("negative increment of both wheels’ motor speed")
 
 
@@ -120,6 +125,7 @@ def move():
     screen.fill((255, 255, 255))
     # background.clamp_ip(screen)
     screen.blit(background, (robot.location[0], robot.location[1]))
+    pygame.display.update()
 
 
 # def calcBounds(pos, pos_change, axes):
