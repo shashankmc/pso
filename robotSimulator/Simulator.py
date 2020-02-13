@@ -1,11 +1,8 @@
-import time
-from pynput.keyboard import Key, Listener
 from pygame.locals import *
 import pygame
-import random
 
-from Obstacle import Obstacle
-from Robot import Robot
+from robotSimulator.Obstacle import Obstacle
+from robotSimulator.Robot import Robot
 
 keepRunning = True
 timeTick = 0
@@ -17,38 +14,21 @@ pygame.init()
 # set the screen size as per requirement
 screen = pygame.display.set_mode((640, 480))
 
+background : any
+
+
 def init():
     global robot
+    global background
+
     print("init")
-    Listener(on_release=on_release).start()
     robot = Robot([1, 1], [0, 0])
-    obstacleList.append(Obstacle([0,0],[3,0]))
-    obstacleList.append(Obstacle([3,0],[3,3]))
-    obstacleList.append(Obstacle([3,3],[0,3]))
-    obstacleList.append(Obstacle([0,3],[0,0]))
-    print("init end")
+    obstacleList.append(Obstacle([0, 0], [3, 0]))
+    obstacleList.append(Obstacle([3, 0], [3, 3]))
+    obstacleList.append(Obstacle([3, 3], [0, 3]))
+    obstacleList.append(Obstacle([0, 3], [0, 0]))
 
 
-def update():
-    global timeTick
-    global tickRate
-    global robot
-    global obstacleList
-
-    timeTick = timeTick + 1
-    print("Update: " + str(timeTick))
-    calculateNextPosition()
-    display()
-    time.sleep(tickRate)
-
-
-def display():
-    print("display")
-
-
-
-# this function is to display the frame for the simulation
-def initDisplay():
     # empty the background -- this needs to be set only initially. This is here for current run
     background = pygame.Surface(screen.get_size())
     # make the background white in color
@@ -59,50 +39,83 @@ def initDisplay():
     y = 25
     # the circle created will represent the object or robot which will move based on key inputs
     # the parameters for drawing a circle are these - (Surface, color, pos, radius, width=0)
-    pygame.draw.circle(background, (0, 200, 0), (x,y), 25)
+    pygame.draw.circle(background, (0, 200, 0), (x, y), 25)
     # the function blit creates the initially drawing based on the settings
     screen.blit(background, (0, 0))
-    waitForInput = True
     FPS = 30
-    # once the display is put up in front of the user
-    # pygame module waits for key strokes from the user
-    x_change = 0
-    y_change = 0
-    while waitForInput:
-        pygame.display.flip()
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                waitForInput = False
-            if event.type == pygame.KEYDOWN:
-                if event.key == K_q:
-                    waitForInput = False
-                elif event.key == K_d:
-                    print('You just pressed d')
-                    x_change = 25
-                    #x_change = calcBounds(x, x_change, 'x')
-                    x += x_change
-                elif event.key == K_w:
-                    print('You just pressed w')
-                    y_change = -25
-                    # y_change = calcBounds(y, y_change, 'y')
-                    y += y_change
-                elif event.key == K_a:
-                    print('You just pressed a')
-                    x_change = -25
-                    #x_change = calcBounds(x, x_change, 'x')
-                    x += x_change
-                elif event.key == K_s:
-                    print('You have pressed s')
-                    y_change = 25
-                    # y_change = calcBounds(y, y_change, 'y')
-                    y += y_change
-                print(x, y)
-                move(x, y, background)
 
-def move(x, y, background):
+    print("init end")
+
+
+def update():
+    global timeTick
+    global tickRate
+    global robot
+    global obstacleList
+
+    timeTick = timeTick + 1
+    #print("Update: " + str(timeTick))
+
+    pygame.display.flip()
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            waitForInput = False
+        if event.type == pygame.KEYDOWN:
+            handleInput(event.key)
+
+    move()
+
+def handleInput(key):
+    global keepRunning
+    if key == K_ESCAPE:
+        keepRunning = False
+        return
+    if key == K_d:
+        print('You just pressed d')
+        x_change = 25
+        # x_change = calcBounds(x, x_change, 'x')
+        robot.location[0] += x_change
+        return
+    if key == K_w:
+        print('You just pressed w')
+        print("positive increment of left wheel motor speed")
+        y_change = -25
+        # y_change = calcBounds(y, y_change, 'y')
+        robot.location[1] += y_change
+        return
+    if key == K_a:
+        print('You just pressed a')
+        x_change = -25
+        # x_change = calcBounds(x, x_change, 'x')
+        robot.location[0] += x_change
+        return
+    if key == K_s:
+        print('You have pressed s')
+        print("negative increment of left wheel motor speed")
+        y_change = 25
+        # y_change = calcBounds(y, y_change, 'y')
+        robot.location[1] += y_change
+        return
+    if key == K_o:
+        print("positive increment of right wheel motor speed")
+    if key == K_l:
+        print("negative increment of right wheel motor speed")
+    if key == K_x:
+        print("both motor speeds are zero")
+    if key == K_t:
+        print("positive increment of both wheels’ motor speed")
+    if key == K_g:
+        print("negative increment of both wheels’ motor speed")
+
+
+
+def move():
+    global robot
+    global background
     screen.fill((255, 255, 255))
     # background.clamp_ip(screen)
-    screen.blit(background, (x,y))
+    screen.blit(background, (robot.location[0], robot.location[1]))
+
 
 # def calcBounds(pos, pos_change, axes):
 #    if (axes == 'x'):
@@ -117,7 +130,7 @@ def move(x, y, background):
 #            pos_change
 #    return (pos_change)
 
-    
+
 def calculateNextPosition():
     checkCollision()
     print("calc next position")
@@ -128,40 +141,8 @@ def checkCollision():
     print("update direction according to collision")
 
 
-def on_release(key):
-    global keepRunning
-    print('{0} release'.format(
-        key))
+init()
+while keepRunning:
+    update()
 
-    if str(key)[1:2] == 'w':
-        print("positive increment of left wheel motor speed")
-
-    if str(key)[1:2] == 's':
-        print("negative increment of left wheel motor speed")
-
-    if str(key)[1:2] == 'o':
-        print("positive increment of right wheel motor speed")
-
-    if str(key)[1:2] == 'l':
-        print("negative increment of right wsolxtgwheel motor speed")
-
-    if str(key)[1:2] == 'x':
-        print("both motor speeds are zero")
-
-    if str(key)[1:2] == 't':
-        print("positive increment of both wheels’ motor speed")
-
-    if str(key)[1:2] == 'g':
-        print("negative increment of both wheels’ motor speed")
-
-    if key == Key.esc:
-        keepRunning = False
-        return False
-
-
-
-initDisplay()
-#init()
-# while keepRunning:
-#    update()
 pygame.quit()
