@@ -1,8 +1,8 @@
 from pygame.locals import *
 import pygame
 import math
-from Obstacle import Obstacle
-from Robot import Robot
+from robotSimulator.Obstacle import Obstacle
+from robotSimulator.Robot import Robot
 
 keepRunning = True
 timeTick = 0.1
@@ -169,8 +169,6 @@ def robotSensor():
     # display the distance between the robot and the object.
     # calculate the distance -- this is a dummy calculation and needs to modified
     dist = math.hypot(start_location[0]-end_location[0], start_location[1] - end_location[1])
-    # text_surface_obj = font_obj.render((str(robot.location[0]) + ',' +str(robot.location[1])), 
-    #                                   True, (150, 150, 0))
     text_surface_obj = font_obj.render("%.2f" % round(dist, 2), True, black)
     text_rect_obj = text_surface_obj.get_rect()
     text_rect_obj.center = (text_location)
