@@ -45,10 +45,10 @@ def init():
 
     print("init")
     robot = Robot([200, 200, 0], [0, 0])
-    obstacleList.append(Obstacle([0, 0], [30, 0]))
-    obstacleList.append(Obstacle([30, 0], [30, 30]))
-    obstacleList.append(Obstacle([30, 0], [0, 30]))
-    obstacleList.append(Obstacle([0, 30], [0, 0]))
+    obstacleList.append(Obstacle([10, 10], [10, 30]))
+    obstacleList.append(Obstacle([100, 40], [100, 100]))
+    obstacleList.append(Obstacle([240, 450], [240, 240]))
+    # obstacleList.append(Obstacle([0, 0], [0, 0]))
 
     # setup a surface for the circle to displayed on
     circleSurf = pygame.Surface(((2 * circleRadius),(2 * circleRadius)))
@@ -140,12 +140,12 @@ def move():
     global circleSurf
     global circleObj
     global timeTick
-    screen.fill((255, 255, 255))
+    screen.fill(white)
     # background.clamp_ip(screen)
     robot.updateLocation(timeTick)
+    addObstacle()
     screen.blit(circleSurf, (robot.xCoord, robot.yCoord))
     robotSensor()
-    addObstacle()
     pygame.display.update()
     
 
@@ -178,7 +178,8 @@ def robotSensor():
     
 
 def addObstacle():
-    for obstacle in obstacleList:
+    screen.fill(white)
+    for obstacle in obstacleList:    
         obstacleObj = pygame.draw.line(screen, black,
                                        (obstacle.startLoc[0], obstacle.startLoc[1]),
                                        (obstacle.endLoc[0], obstacle.endLoc[0]), 5)
