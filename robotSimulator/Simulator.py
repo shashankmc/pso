@@ -3,6 +3,7 @@ import pygame
 import math
 from robotSimulator.Obstacle import Obstacle
 from robotSimulator.Robot import Robot
+import numpy as np
 
 keepRunning = True
 timeTick = 0.1
@@ -34,7 +35,7 @@ circleSurf: any
 obstacleList: any
 obstacleSurf: any
 clock: any
-FPS = 10
+FPS = 20
 
 
 def init():
@@ -51,7 +52,7 @@ def init():
     # obstacleList.append(Obstacle([0, 0], [0, 0]))
 
     # setup a surface for the circle to displayed on
-    circleSurf = pygame.Surface(((2 * circleRadius),(2 * circleRadius)))
+    circleSurf = pygame.Surface(((2 * circleRadius), (2 * circleRadius)))
     # make the background white in color
     circleSurf.fill(white)
     # setting the initial position
@@ -61,7 +62,7 @@ def init():
     # the parameters for drawing a circle are these - (Surface, color, pos, radius, width=0)
     circleObj = pygame.draw.circle(circleSurf, red, (x, y), circleRadius)
     screen.blit(screen, circleObj)
-    #addObstacle()
+    # addObstacle()
     # for obstacle in obstacleList:
     #   print(obstacle)
     pygame.display.update()
@@ -116,12 +117,12 @@ def handleInput():
         return
     if keys[pygame.K_o]:
         print("positive increment of right wheel motor speed")
-        robot.xCoord += changePos
+        # robot.xCoord += changePos
         robot.rightWheelInc()
         return
     if keys[pygame.K_l]:
         print("negative increment of right wheel motor speed")
-        robot.xCoord -= changePos
+        # robot.xCoord -= changePos
         robot.rightWheelDec()
         return
     if keys[pygame.K_x]:
@@ -147,7 +148,7 @@ def move():
     screen.blit(circleSurf, (robot.xCoord, robot.yCoord))
     robotSensor()
     pygame.display.update()
-    
+
 
 def calculateNextPosition():
     checkCollision()
@@ -157,27 +158,33 @@ def calculateNextPosition():
 def checkCollision():
     print("check collisions")
     print("update direction according to collision")
-    
+
 
 def robotSensor():
     global circleSurf
-    start_location = [robot.xCoord + circleRadius, robot.yCoord + circleRadius]
-    text_location = [robot.xCoord + 2 * circleRadius, robot.yCoord + 2 * circleRadius]
-    end_location = [robot.xCoord + 3 * circleRadius, robot.yCoord + 3 * circleRadius]   
+    print("angle: " + str(robot.forwardAngle) + ", cos: " + str(np.cos(robot.forwardAngle)) + ", sin: " + str(
+        np.sin(robot.forwardAngle)))
+
+    start_location = [robot.xCoord + np.cos(robot.forwardAngle) * circleRadius + circleRadius,
+                      robot.yCoord + np.sin(robot.forwardAngle) * circleRadius + circleRadius]
+    text_location = [robot.xCoord + np.cos(robot.forwardAngle) * 2 * circleRadius + circleRadius,
+                     robot.yCoord + np.sin(robot.forwardAngle) * 2 * circleRadius + circleRadius]
+    end_location = [robot.xCoord + np.cos(robot.forwardAngle) * 3 * circleRadius + circleRadius,
+                    robot.yCoord + np.sin(robot.forwardAngle) * 3 * circleRadius + circleRadius]
     # draw the line
-    pygame.draw.line(screen, blue, start_location, end_location, 2 )
+    pygame.draw.line(screen, blue, start_location, end_location, 2)
     # display the distance between the robot and the object.
     # calculate the distance -- this is a dummy calculation and needs to modified
-    dist = math.hypot(start_location[0]-end_location[0], start_location[1] - end_location[1])
+    dist = math.hypot(start_location[0] - end_location[0], start_location[1] - end_location[1])
     text_surface_obj = font_obj.render("%.2f" % round(dist, 2), True, black)
     text_rect_obj = text_surface_obj.get_rect()
     text_rect_obj.center = (text_location)
     screen.blit(text_surface_obj, text_rect_obj)
-    
+
 
 def addObstacle():
     screen.fill(white)
-    for obstacle in obstacleList:    
+    for obstacle in obstacleList:
         obstacleObj = pygame.draw.line(screen, black,
                                        (obstacle.startLoc[0], obstacle.startLoc[1]),
                                        (obstacle.endLoc[0], obstacle.endLoc[0]), 5)
