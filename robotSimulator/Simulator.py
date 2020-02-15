@@ -189,8 +189,8 @@ def robotSensor():
     # display the distance between the robot and the object.
     # calculate the distance -- this is a dummy calculation and needs to modified
     dist = math.hypot(start_location[0] - end_location[0], start_location[1] - end_location[1])
-    distToObj = distanceToClosestObj(start_location[0] - robot.xCoord, start_location[1] - robot.yCoord, robot.xCoord,
-                                     robot.yCoord)
+    distToObj = distanceToClosestObj(start_location[0]  - robot.xCoord + circleRadius, start_location[1] - robot.yCoord + circleRadius, robot.xCoord + circleRadius,
+                                     robot.yCoord + circleRadius)
 
     text_surface_obj = font_obj.render("%.2f" % round(distToObj, 2), True, black)
     text_rect_obj = text_surface_obj.get_rect()
@@ -227,6 +227,7 @@ def distanceToObj(robotDirX, robotDirY, robotMiddleX, robotMiddleY, wallDirX, wa
         s = (wallStartY - robotMiddleY) / robotDirY
         g = (s * robotDirX + robotMiddleX - wallStartX) / wallDirX
     # if true than parallel
+
     elif wallDirX * (robotDirY / wallDirY) == robotDirX:
         return 100
     else:
@@ -234,9 +235,11 @@ def distanceToObj(robotDirX, robotDirY, robotMiddleX, robotMiddleY, wallDirX, wa
         # s = x of sensor line
         g = (s * robotDirX + robotMiddleX - wallStartX) / wallDirX
         print("s: = " + str(s) + ", g: " + str(g))
-
+    print("S: " +str(s))
     if g < 0 or g > 1:
         return 100
+    if robotDirX < 0:
+        s = -s
     # s is distance
     if s < 0:
         return 100
