@@ -82,10 +82,10 @@ def initMap():
     global obstacleList
 
     thickness = 10
-    #obstacleList.append(Obstacle([0, 0], [0, screenHeight]))
-    #obstacleList.append(Obstacle([0, screenHeight], [screenWidth, screenHeight]))
-    #obstacleList.append(Obstacle([screenWidth, screenHeight], [screenWidth, 0]))
-    #obstacleList.append(Obstacle([screenWidth, 0], [0, 0]))
+    # obstacleList.append(Obstacle([0, 0], [0, screenHeight]))
+    # obstacleList.append(Obstacle([0, screenHeight], [screenWidth, screenHeight]))
+    # obstacleList.append(Obstacle([screenWidth, screenHeight], [screenWidth, 0]))
+    # obstacleList.append(Obstacle([screenWidth, 0], [0, 0]))
 
     obstacleList.append(Obstacle([100, 40], [100, 100]))
     obstacleList.append(Obstacle([240, 450], [240, 240]))
@@ -191,6 +191,7 @@ def robotSensor():
     dist = math.hypot(start_location[0] - end_location[0], start_location[1] - end_location[1])
     distToObj = distanceToClosestObj(start_location[0] - robot.xCoord, start_location[1] - robot.yCoord, robot.xCoord,
                                      robot.yCoord)
+
     text_surface_obj = font_obj.render("%.2f" % round(distToObj, 2), True, black)
     text_rect_obj = text_surface_obj.get_rect()
     text_rect_obj.center = (text_location)
@@ -202,34 +203,45 @@ def distanceToClosestObj(robotSensorDirX, robotSensorDirY, robotMiddleX, robotMi
     closestDist = 100
 
     for obstacle in obstacleList:
-        #gets distance to obstacle
+        # gets distance to obstacle
         dist = distanceToObj(robotSensorDirX, robotSensorDirY, robotMiddleX, robotMiddleY, obstacle.directionvector[0],
                              obstacle.directionvector[1], obstacle.startLoc[0], obstacle.startLoc[1],
                              )
+        dist = dist * circleRadius
         print("DISTANCE: " + str(dist))
-        #only needs closest distance
+        # only needs closest distance
         if dist < closestDist:
+            print("DISTANCE UPDATE: " + str(dist))
             closestDist = dist
 
     return closestDist
 
 
-def distanceToObj(robotMiddleX, robotMiddleY, robotEdgeX, robotEdgeY, wallDirX, wallDirY, wallStartX, wallStartY):
+def distanceToObj(robotDirX, robotDirY, robotMiddleX, robotMiddleY, wallDirX, wallDirY, wallStartX, wallStartY):
 
-    # g = x of wall line
-    if robotMiddleX == wallDirY or wallDirX==0 or robotMiddleY==0 or robotMiddleX==0:
-        return 99
-    g = (-(wallStartX - robotEdgeY) * robotMiddleY / robotMiddleX + wallStartY - robotEdgeY) / (wallDirX * robotMiddleY / robotMiddleX - wallDirY)
-    # s = x of sensor line
+    if wallDirX == 0:
+        s = (wallStartX - robotMiddleX) / robotDirX
+        g = (s * robotDirY + robotMiddleY - wallStartY) / wallDirY
 
-    s = (g * wallDirX + wallStartX - robotEdgeX) / robotMiddleX
+    elif wallDirY == 0:
+        s = (wallStartY - robotMiddleY) / robotDirY
+        g = (s * robotDirX + robotMiddleX - wallStartX) / wallDirX
+    # if true than parallel
+    elif wallDirX * (robotDirY / wallDirY) == robotDirX:
+        return 100
+    else:
+        s = ((wallStartY - robotMiddleY) / robotDirY) / (1 - ((robotDirX + robotMiddleX - wallStartX) / wallDirX))
+        # s = x of sensor line
+        g = (s * robotDirX + robotMiddleX - wallStartX) / wallDirX
+        print("s: = " + str(s) + ", g: " + str(g))
 
     if g < 0 or g > 1:
-       return 100
-    #s is distance
+        return 100
+    # s is distance
+    if s < 0:
+        return 100
     return s
 
-    print("blalba")
 
 
 def addObstacle():
