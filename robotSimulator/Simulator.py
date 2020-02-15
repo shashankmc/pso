@@ -82,10 +82,10 @@ def initMap():
     global obstacleList
 
     thickness = 10
-    obstacleList.append(Obstacle([0, 0], [0, screenHeight]))
-    obstacleList.append(Obstacle([0, screenHeight], [screenWidth, screenHeight]))
-    obstacleList.append(Obstacle([screenWidth, screenHeight], [screenWidth, 0]))
-    obstacleList.append(Obstacle([screenWidth, 0], [0, 0]))
+    #obstacleList.append(Obstacle([0, 0], [0, screenHeight]))
+    #obstacleList.append(Obstacle([0, screenHeight], [screenWidth, screenHeight]))
+    #obstacleList.append(Obstacle([screenWidth, screenHeight], [screenWidth, 0]))
+    #obstacleList.append(Obstacle([screenWidth, 0], [0, 0]))
 
     obstacleList.append(Obstacle([100, 40], [100, 100]))
     obstacleList.append(Obstacle([240, 450], [240, 240]))
@@ -177,8 +177,6 @@ def checkCollision():
 
 def robotSensor():
     global circleSurf
-    print("angle: " + str(robot.forwardAngle) + ", cos: " + str(np.cos(robot.forwardAngle)) + ", sin: " + str(
-        np.sin(robot.forwardAngle)))
 
     start_location = [robot.xCoord + np.cos(robot.forwardAngle) * circleRadius + circleRadius,
                       robot.yCoord + np.sin(robot.forwardAngle) * circleRadius + circleRadius]
@@ -191,29 +189,46 @@ def robotSensor():
     # display the distance between the robot and the object.
     # calculate the distance -- this is a dummy calculation and needs to modified
     dist = math.hypot(start_location[0] - end_location[0], start_location[1] - end_location[1])
-    distToObj = 12
-    # distanceToObjs()
-    text_surface_obj = font_obj.render("%.2f" % round(dist, 2), True, black)
+    distToObj = distanceToClosestObj(start_location[0] - robot.xCoord, start_location[1] - robot.yCoord, robot.xCoord,
+                                     robot.yCoord)
+    text_surface_obj = font_obj.render("%.2f" % round(distToObj, 2), True, black)
     text_rect_obj = text_surface_obj.get_rect()
     text_rect_obj.center = (text_location)
     screen.blit(text_surface_obj, text_rect_obj)
 
 
-def distanceToObjs(a1, a2, b1, b2):
-    # 1 calculate intersection with line
-    # 1.1 calc line equation
-    s = np.vstack([a1, a2, b1, b2])  # s for stacked
-    h = np.hstack((s, np.ones((4, 1))))  # h for homogeneous
-    l1 = np.cross(h[0], h[1])  # get first line
-    l2 = np.cross(h[2], h[3])  # get second line
-    x, y, z = np.cross(l1, l2)  # point of intersection
-    if z == 0:  # lines are parallel
-        return (float('inf'), float('inf'))
+def distanceToClosestObj(robotSensorDirX, robotSensorDirY, robotMiddleX, robotMiddleY):
+    global obstacleList
+    closestDist = 100
 
-    # 2 check if intersection point is inside line length
-    # 3 calc distance to intersection point
-    # 4 store it in list for all object,
-    # 5 display the smallest
+    for obstacle in obstacleList:
+        #gets distance to obstacle
+        dist = distanceToObj(robotSensorDirX, robotSensorDirY, robotMiddleX, robotMiddleY, obstacle.directionvector[0],
+                             obstacle.directionvector[1], obstacle.startLoc[0], obstacle.startLoc[1],
+                             )
+        print("DISTANCE: " + str(dist))
+        #only needs closest distance
+        if dist < closestDist:
+            closestDist = dist
+
+    return closestDist
+
+
+def distanceToObj(robotMiddleX, robotMiddleY, robotEdgeX, robotEdgeY, wallDirX, wallDirY, wallStartX, wallStartY):
+
+    # g = x of wall line
+    if robotMiddleX == wallDirY or wallDirX==0 or robotMiddleY==0 or robotMiddleX==0:
+        return 99
+    g = (-(wallStartX - robotEdgeY) * robotMiddleY / robotMiddleX + wallStartY - robotEdgeY) / (wallDirX * robotMiddleY / robotMiddleX - wallDirY)
+    # s = x of sensor line
+
+    s = (g * wallDirX + wallStartX - robotEdgeX) / robotMiddleX
+
+    if g < 0 or g > 1:
+       return 100
+    #s is distance
+    return s
+
     print("blalba")
 
 
