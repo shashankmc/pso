@@ -23,7 +23,7 @@ class Robot:
 
         self.vLeft = startVelo[0]
         self.vRight = startVelo[1]
-        self.length = 1
+        self.length = 5
 
     def __str__(self):
         msg = " Robot:\n"

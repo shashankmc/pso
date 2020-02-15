@@ -24,17 +24,14 @@ black = (0, 0, 0)
 red = (255, 0, 0)
 green = (0, 255, 0)
 blue = (0, 0, 255)
-# initiates pygame for the simulation of an object
-pygame.init()
-# set the screen size as per requirement
-screen = pygame.display.set_mode((screenWidth, screenHeight))
-screen.fill(white)
-font_obj = pygame.font.Font('freesansbold.ttf', 12)
+
+screen: any
 
 circleSurf: any
 obstacleList: any
 obstacleSurf: any
 clock: any
+font_obj: any
 FPS = 20
 
 
@@ -43,13 +40,20 @@ def init():
     global clock
     global circleSurf
     global circleObj
+    global screen
+    global font_obj
 
-    print("init")
+    print("init Objects")
     robot = Robot([200, 200, 0], [0, 0])
-    obstacleList.append(Obstacle([10, 10], [10, 30]))
-    obstacleList.append(Obstacle([100, 40], [100, 100]))
-    obstacleList.append(Obstacle([240, 450], [240, 240]))
-    # obstacleList.append(Obstacle([0, 0], [0, 0]))
+    initMap()
+
+    print("init display")
+    # initiates pygame for the simulation of an object
+    pygame.init()
+    # set the screen size as per requirement
+    screen = pygame.display.set_mode((screenWidth, screenHeight))
+    screen.fill(white)
+    font_obj = pygame.font.Font('freesansbold.ttf', 12)
 
     # setup a surface for the circle to displayed on
     circleSurf = pygame.Surface(((2 * circleRadius), (2 * circleRadius)))
@@ -72,6 +76,19 @@ def init():
     clock = pygame.time.Clock()
 
     print("init end")
+
+
+def initMap():
+    global obstacleList
+
+    thickness = 10
+    obstacleList.append(Obstacle([0, 0], [0, screenHeight]))
+    obstacleList.append(Obstacle([0, screenHeight], [screenWidth, screenHeight]))
+    obstacleList.append(Obstacle([screenWidth, screenHeight], [screenWidth, 0]))
+    obstacleList.append(Obstacle([screenWidth, 0], [0, 0]))
+
+    obstacleList.append(Obstacle([100, 40], [100, 100]))
+    obstacleList.append(Obstacle([240, 450], [240, 240]))
 
 
 def update():
@@ -109,11 +126,9 @@ def handleInput():
 
     if keys[pygame.K_d] and robot.xCoord < screenWidth - (2 * circleRadius):
         print('You just pressed d')
-        robot.xCoord += changePos
         return
     if keys[pygame.K_a] and robot.xCoord > changePos:
         print('You just pressed a')
-        robot.xCoord -= changePos
         return
     if keys[pygame.K_o]:
         print("positive increment of right wheel motor speed")
@@ -176,19 +191,39 @@ def robotSensor():
     # display the distance between the robot and the object.
     # calculate the distance -- this is a dummy calculation and needs to modified
     dist = math.hypot(start_location[0] - end_location[0], start_location[1] - end_location[1])
+    distToObj = 12
+    # distanceToObjs()
     text_surface_obj = font_obj.render("%.2f" % round(dist, 2), True, black)
     text_rect_obj = text_surface_obj.get_rect()
     text_rect_obj.center = (text_location)
     screen.blit(text_surface_obj, text_rect_obj)
 
 
+def distanceToObjs(a1, a2, b1, b2):
+    # 1 calculate intersection with line
+    # 1.1 calc line equation
+    s = np.vstack([a1, a2, b1, b2])  # s for stacked
+    h = np.hstack((s, np.ones((4, 1))))  # h for homogeneous
+    l1 = np.cross(h[0], h[1])  # get first line
+    l2 = np.cross(h[2], h[3])  # get second line
+    x, y, z = np.cross(l1, l2)  # point of intersection
+    if z == 0:  # lines are parallel
+        return (float('inf'), float('inf'))
+
+    # 2 check if intersection point is inside line length
+    # 3 calc distance to intersection point
+    # 4 store it in list for all object,
+    # 5 display the smallest
+    print("blalba")
+
+
 def addObstacle():
-    screen.fill(white)
+    # screen.fill(white)
     for obstacle in obstacleList:
         obstacleObj = pygame.draw.line(screen, black,
                                        (obstacle.startLoc[0], obstacle.startLoc[1]),
-                                       (obstacle.endLoc[0], obstacle.endLoc[0]), 5)
-        screen.blit(screen, obstacleObj)
+                                       (obstacle.endLoc[0], obstacle.endLoc[1]), 5)
+        # screen.blit(screen, obstacleObj)
 
 
 init()
