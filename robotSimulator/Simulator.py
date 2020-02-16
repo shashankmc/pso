@@ -216,8 +216,8 @@ def robotSensor2():
         dist = math.hypot(start_location[0] - end_location[0], start_location[1] - end_location[1])
         distToObj = distanceToClosestObj(start_location[0] - robot.xCoord,
                                          start_location[1] - robot.yCoord, robot.xCoord,
-                                         robot.yCoord)
-        text_surface_obj = font_obj.render("%.2f" % round(distToObj-circleRadius, 2), True, black)
+                                         robot.yCoord) - circleRadius
+        text_surface_obj = font_obj.render("%.2f" % round(distToObj, 2), True, black)
         text_rect_obj = text_surface_obj.get_rect()
         text_rect_obj.center = (text_location)
         screen.blit(text_surface_obj, text_rect_obj)
