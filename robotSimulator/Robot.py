@@ -4,6 +4,8 @@ import numpy as np
 class Robot:
     xCoord = 0
     yCoord = 0
+    nextX = 0
+    nextY = 0
 
     # angle with the X-Axis and the direction the robot is facing
     forwardAngle = 0
@@ -13,7 +15,8 @@ class Robot:
 
     length = 0
 
-    def __init__(self, startLoc: [], startVelo: []):
+    def __init__(self, radius, startLoc: [], startVelo: []):
+        self.length = radius
         self.xCoord = startLoc[0]
         self.yCoord = startLoc[1]
         if len(startLoc) > 2:
@@ -23,8 +26,6 @@ class Robot:
 
         self.vLeft = startVelo[0]
         self.vRight = startVelo[1]
-        self.length = 5
-
     def __str__(self):
         msg = " Robot:\n"
         msg += "Robot location: x= " + str(self.xCoord) + ", y= " + str(self.yCoord) + "\n"
@@ -56,13 +57,70 @@ class Robot:
         self.vRight -= 1
         self.vLeft -= 1
 
-    def updateLocation(self, timeStep):
+    def collisionstuff(self, obstacleList):
+        collision = -1
+
+        for i in range(len(obstacleList)):
+            p1 = np.array(obstacleList[i].startLoc)
+            p2 = np.array(obstacleList[i].endLoc)
+            p3 = np.array([self.xCoord, self.yCoord])
+            distance = np.linalg.norm(np.cross(p2 - p1, p3-p1))/np.linalg.norm(p2-p1)
+            #print("wall " + str(i) + "distance: " + str(distance))
+            if (self.length > distance):
+                if (self.inbetween(p1,p2)):
+                    if (collision<0):
+                        collision = i
+                    else:
+                        print("stuck between two walls")
+                        return
+        if (collision>-1):
+            print("colliding wall " + str(collision))
+            v1 = obstacleList[collision].endLoc - obstacleList[collision].startLoc
+            v2 = [self.nextX - self.xCoord, self.nextY - self.yCoord]
+            angle = np.degrees(np.arccos(np.dot(v1,v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))))
+            print("angle: " + str(angle))
+
+            newV = v1 / np.linalg.norm(v1)
+            newV *= np.cos(np.radians(angle))
+            print(np.cos(np.radians(angle)))
+            self.nextX = self.xCoord + newV[0]
+            self.nextY = self.yCoord + newV[1]
+
+        self.xCoord = self.nextX
+        self.yCoord = self.nextY
+        
+    def inbetween(self,p1,p2):
+        if (p1[0]<p2[0]):
+            x1 = p1[0]
+            x2 = p2[0]
+        else:
+            x1 = p2[0]
+            x2 = p1[0]
+
+        if (p1[1]<p2[1]):
+            y1 = p1[1]
+            y2 = p2[1]
+        else:
+            y1 = p2[1]
+            y2 = p1[1]
+        print(x1)
+        print(x2)
+        print(y1)
+        print(y2)
+        if (x1==x2):
+            return (self.yCoord >= y1 and self.yCoord <= y2)
+        if (y1==y2):
+            return (self.xCoord >= x1 and self.xCoord <= x2)
+        return (self.xCoord >= x1 and self.xCoord <= x2 and self.yCoord >= y1 and self.yCoord <= y2)
+
+    def updateLocation(self, timeStep, obstacleList):
 
         # In case vL and vR are equal the calc of R would throw and error /0
         # but in that case the direction is forward facing
         if self.vLeft == self.vRight:
-            self.xCoord += self.vRight * np.cos(self.forwardAngle) * timeStep
-            self.yCoord += self.vRight * np.sin(self.forwardAngle) * timeStep
+            self.nextX = self.xCoord + self.vRight * np.cos(self.forwardAngle) * timeStep
+            self.nextY = self.yCoord + self.vRight * np.sin(self.forwardAngle) * timeStep
+            self.collisionstuff(obstacleList)
             return
 
         # In case vL and vR are opposite, this would work with normal calc, but a lot of stuff is unnesseary
@@ -81,6 +139,8 @@ class Robot:
         addMat = [ICC[0], ICC[1], omega * timeStep]
         result = np.matmul(rotMat, difMat) + addMat
 
-        self.xCoord = result[0]
-        self.yCoord = result[1]
+        self.nextX = result[0]
+        self.nextY = result[1]
         self.forwardAngle = result[2]
+
+        self.collisionstuff(obstacleList)

@@ -1,8 +1,6 @@
 from pygame.locals import *
 import pygame
 import math
-# from robotSimulator.Obstacle import Obstacle
-# from robotSimulator.Robot import Robot
 from Obstacle import Obstacle
 from Robot import Robot
 import numpy as np
@@ -46,7 +44,7 @@ def init():
     global font_obj
 
     print("init Objects")
-    robot = Robot([200, 200, 0], [0, 0])
+    robot = Robot(circleRadius, [150, 300, 0], [0, 0])
     initMap()
 
     print("init display")
@@ -154,13 +152,13 @@ def handleInput():
 
 
 def move():
-    global robot
+    global robotw
     global circleSurf
     global circleObj
     global timeTick
     screen.fill(white)
     # background.clamp_ip(screen)
-    robot.updateLocation(timeTick)
+    robot.updateLocation(timeTick, obstacleList)
     addObstacle()
     screen.blit(circleSurf, (robot.xCoord, robot.yCoord))
     robotSensor2()
