@@ -1,8 +1,10 @@
 from pygame.locals import *
 import pygame
 import math
-from robotSimulator.Obstacle import Obstacle
-from robotSimulator.Robot import Robot
+# from robotSimulator.Obstacle import Obstacle
+# from robotSimulator.Robot import Robot
+from Obstacle import Obstacle
+from Robot import Robot
 import numpy as np
 
 keepRunning = True
@@ -53,7 +55,7 @@ def init():
     # set the screen size as per requirement
     screen = pygame.display.set_mode((screenWidth, screenHeight))
     screen.fill(white)
-    font_obj = pygame.font.Font('freesansbold.ttf', 12)
+    font_obj = pygame.font.Font('freesansbold.ttf', 11)
 
     # setup a surface for the circle to displayed on
     circleSurf = pygame.Surface(((2 * circleRadius), (2 * circleRadius)))
@@ -161,7 +163,7 @@ def move():
     robot.updateLocation(timeTick)
     addObstacle()
     screen.blit(circleSurf, (robot.xCoord, robot.yCoord))
-    robotSensor()
+    robotSensor2()
     pygame.display.update()
 
 
@@ -184,8 +186,13 @@ def robotSensor():
                      robot.yCoord + np.sin(robot.forwardAngle) * 2 * circleRadius + circleRadius]
     end_location = [robot.xCoord + np.cos(robot.forwardAngle) * 3 * circleRadius + circleRadius,
                     robot.yCoord + np.sin(robot.forwardAngle) * 3 * circleRadius + circleRadius]
+    # start_location2 = [robot.xCoord + np.cos(robot.forwardAngle + 30) * circleRadius + circleRadius,
+    #                  robot.yCoord + np.sin(robot.forwardAngle + 30) * circleRadius + circleRadius]
+    # end_location2 = [robot.xCoord + np.cos(robot.forwardAngle + 30) * 3 * circleRadius + circleRadius,
+    #                robot.yCoord + np.sin(robot.forwardAngle + 30) * 3 * circleRadius + circleRadius]
     # draw the line
     pygame.draw.line(screen, blue, start_location, end_location, 2)
+    # pygame.draw.line(screen, blue, start_location2, end_location2, 2)
     # display the distance between the robot and the object.
     # calculate the distance -- this is a dummy calculation and needs to modified
     dist = math.hypot(start_location[0] - end_location[0], start_location[1] - end_location[1])
@@ -197,6 +204,27 @@ def robotSensor():
     text_rect_obj = text_surface_obj.get_rect()
     text_rect_obj.center = (text_location)
     screen.blit(text_surface_obj, text_rect_obj)
+
+def robotSensor2():
+    global circelSurf
+    addAngle = 0
+    for i in range(0, 12):
+        start_location = [robot.xCoord + np.cos(robot.forwardAngle + addAngle) * circleRadius + circleRadius,
+                          robot.yCoord + np.sin(robot.forwardAngle + addAngle) * circleRadius + circleRadius]
+        text_location = [robot.xCoord + np.cos(robot.forwardAngle + addAngle) * 4 * circleRadius + circleRadius,
+                     robot.yCoord + np.sin(robot.forwardAngle + addAngle) * 4 * circleRadius + circleRadius]
+        end_location = [robot.xCoord + np.cos(robot.forwardAngle + addAngle) * 3 * circleRadius + circleRadius,
+                    robot.yCoord + np.sin(robot.forwardAngle + addAngle) * 3 * circleRadius + circleRadius]
+        pygame.draw.line(screen, blue, start_location, end_location, 2)
+        dist = math.hypot(start_location[0] - end_location[0], start_location[1] - end_location[1])
+        distToObj = distanceToClosestObj(start_location[0] - robot.xCoord - circleRadius,
+                                     start_location[1] - robot.yCoord - circleRadius, robot.xCoord ,
+                                     robot.yCoord)
+        text_surface_obj = font_obj.render("%.2f" % round(distToObj, 2), True, black)
+        text_rect_obj = text_surface_obj.get_rect()
+        text_rect_obj.center = (text_location)
+        screen.blit(text_surface_obj, text_rect_obj)
+        addAngle += 60
 
 
 def distanceToClosestObj(robotSensorDirX, robotSensorDirY, robotMiddleX, robotMiddleY):
