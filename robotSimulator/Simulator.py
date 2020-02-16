@@ -82,13 +82,13 @@ def initMap():
     global obstacleList
 
     thickness = 10
-    # obstacleList.append(Obstacle([0, 0], [0, screenHeight]))
-    # obstacleList.append(Obstacle([0, screenHeight], [screenWidth, screenHeight]))
-    # obstacleList.append(Obstacle([screenWidth, screenHeight], [screenWidth, 0]))
-    # obstacleList.append(Obstacle([screenWidth, 0], [0, 0]))
+    obstacleList.append(Obstacle([0, 0], [0, screenHeight]))
+    obstacleList.append(Obstacle([0, screenHeight], [screenWidth, screenHeight]))
+    obstacleList.append(Obstacle([screenWidth, screenHeight], [screenWidth, 0]))
+    obstacleList.append(Obstacle([screenWidth, 0], [0, 0]))
 
-    obstacleList.append(Obstacle([100, 40], [100, 100]))
-    obstacleList.append(Obstacle([240, 450], [240, 240]))
+    obstacleList.append(Obstacle([100, 40], [130, 100]))
+    obstacleList.append(Obstacle([240, 450], [200, 240]))
 
 
 def update():
@@ -195,13 +195,14 @@ def robotSensor():
     # calculate the distance -- this is a dummy calculation and needs to modified
     dist = math.hypot(start_location[0] - end_location[0], start_location[1] - end_location[1])
     distToObj = distanceToClosestObj(start_location[0] - robot.xCoord - circleRadius,
-                                     start_location[1] - robot.yCoord - circleRadius, robot.xCoord ,
+                                     start_location[1] - robot.yCoord - circleRadius, robot.xCoord,
                                      robot.yCoord)
 
     text_surface_obj = font_obj.render("%.2f" % round(distToObj, 2), True, black)
     text_rect_obj = text_surface_obj.get_rect()
     text_rect_obj.center = (text_location)
     screen.blit(text_surface_obj, text_rect_obj)
+
 
 def robotSensor2():
     global circelSurf
@@ -210,24 +211,24 @@ def robotSensor2():
         start_location = [robot.xCoord + np.cos(robot.forwardAngle + addAngle) * circleRadius + circleRadius,
                           robot.yCoord + np.sin(robot.forwardAngle + addAngle) * circleRadius + circleRadius]
         text_location = [robot.xCoord + np.cos(robot.forwardAngle + addAngle) * 4 * circleRadius + circleRadius,
-                     robot.yCoord + np.sin(robot.forwardAngle + addAngle) * 4 * circleRadius + circleRadius]
+                         robot.yCoord + np.sin(robot.forwardAngle + addAngle) * 4 * circleRadius + circleRadius]
         end_location = [robot.xCoord + np.cos(robot.forwardAngle + addAngle) * 3 * circleRadius + circleRadius,
-                    robot.yCoord + np.sin(robot.forwardAngle + addAngle) * 3 * circleRadius + circleRadius]
+                        robot.yCoord + np.sin(robot.forwardAngle + addAngle) * 3 * circleRadius + circleRadius]
         pygame.draw.line(screen, blue, start_location, end_location, 2)
         dist = math.hypot(start_location[0] - end_location[0], start_location[1] - end_location[1])
         distToObj = distanceToClosestObj(start_location[0] - robot.xCoord - circleRadius,
-                                     start_location[1] - robot.yCoord - circleRadius, robot.xCoord ,
-                                     robot.yCoord)
+                                         start_location[1] - robot.yCoord - circleRadius, robot.xCoord,
+                                         robot.yCoord)
         text_surface_obj = font_obj.render("%.2f" % round(distToObj, 2), True, black)
         text_rect_obj = text_surface_obj.get_rect()
         text_rect_obj.center = (text_location)
         screen.blit(text_surface_obj, text_rect_obj)
-        addAngle += 60
+        addAngle += np.pi / 6
 
 
 def distanceToClosestObj(robotSensorDirX, robotSensorDirY, robotMiddleX, robotMiddleY):
     global obstacleList
-    closestDist = 100
+    closestDist = 100000
 
     for obstacle in obstacleList:
         # gets distance to obstacle
@@ -252,14 +253,26 @@ def distanceToObj(robotDirX, robotDirY, robotMiddleX, robotMiddleY, wallDirX, wa
     elif wallDirY == 0:
         s = (wallStartY - robotMiddleY) / robotDirY
         g = (s * robotDirX + robotMiddleX - wallStartX) / wallDirX
-    # if true than parallel
 
+    elif robotDirX == 0:
+        g = (robotMiddleX - wallStartX) / wallDirX
+        s = (g * wallDirY + wallStartY - robotMiddleY) / robotDirY
+
+    elif robotDirY == 0:
+        g = (robotMiddleY - wallStartY) / wallDirY
+        s = (g * wallDirX + wallStartX - robotMiddleX) / robotDirX
+
+
+    # if true than parallel
     elif wallDirX * (robotDirY / wallDirY) == robotDirX:
         return 100
     else:
-        s = ((wallStartY - robotMiddleY) / robotDirY) / (1 - ((robotDirX + robotMiddleX - wallStartX) / wallDirX))
+        g = (((wallStartY - robotMiddleY) / robotDirY) * (robotDirX / wallDirX) + (
+                    (robotMiddleX - wallStartX) / wallDirX)) / (1 - ((robotDirX * wallDirY) / (wallDirX * robotDirY)))
+        # s = ((wallStartY - robotMiddleY) / robotDirY) / (1 - ((robotDirX + robotMiddleX - wallStartX) / wallDirX))
         # s = x of sensor line
-        g = (s * robotDirX + robotMiddleX - wallStartX) / wallDirX
+        s = (g * wallDirY + wallStartY - robotMiddleY) / robotDirY
+        # g = (s * robotDirX + robotMiddleX - wallStartX) / wallDirX
         print("s: = " + str(s) + ", g: " + str(g))
     print("S: " + str(s))
     if g < 0 or g > 1:
