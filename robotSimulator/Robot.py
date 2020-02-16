@@ -63,9 +63,10 @@ class Robot:
         for i in range(len(obstacleList)):
             p1 = np.array(obstacleList[i].startLoc)
             p2 = np.array(obstacleList[i].endLoc)
-            p3 = np.array([self.xCoord, self.yCoord])
+            p3 = np.array([self.nextX, self.nextY])
             distance = np.linalg.norm(np.cross(p2 - p1, p3-p1))/np.linalg.norm(p2-p1)
-            #print("wall " + str(i) + "distance: " + str(distance))
+            print(self.length)
+            print("wall " + str(i) + "distance: " + str(distance))
             if (self.length > distance):
                 if (self.inbetween(p1,p2)):
                     if (collision<0):
@@ -82,7 +83,6 @@ class Robot:
 
             newV = v1 / np.linalg.norm(v1)
             newV *= np.cos(np.radians(angle))
-            print(np.cos(np.radians(angle)))
             self.nextX = self.xCoord + newV[0]
             self.nextY = self.yCoord + newV[1]
 
@@ -103,15 +103,11 @@ class Robot:
         else:
             y1 = p2[1]
             y2 = p1[1]
-        print(x1)
-        print(x2)
-        print(y1)
-        print(y2)
         if (x1==x2):
-            return (self.yCoord >= y1 and self.yCoord <= y2)
+            return (self.yCoord + self.length >= y1 and self.yCoord - self.length <= y2)
         if (y1==y2):
-            return (self.xCoord >= x1 and self.xCoord <= x2)
-        return (self.xCoord >= x1 and self.xCoord <= x2 and self.yCoord >= y1 and self.yCoord <= y2)
+            return (self.xCoord + self.length >= x1 and self.xCoord - self.length <= x2)
+        return (self.xCoord + self.length >= x1 and self.xCoord - self.length <= x2 and self.yCoord + self.length >= y1 and self.yCoord - self.length <= y2)
 
     def updateLocation(self, timeStep, obstacleList):
 
