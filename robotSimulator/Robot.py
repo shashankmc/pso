@@ -59,36 +59,60 @@ class Robot:
 
     def collisionstuff(self, obstacleList):
         collision = -1
+        collision2 = -1
 
         for i in range(len(obstacleList)):
             p1 = np.array(obstacleList[i].startLoc)
             p2 = np.array(obstacleList[i].endLoc)
             p3 = np.array([self.nextX, self.nextY])
             distance = np.linalg.norm(np.cross(p2 - p1, p3-p1))/np.linalg.norm(p2-p1)
-            print(self.length)
-            print("wall " + str(i) + "distance: " + str(distance))
+            #print(self.length)
+            #print("wall " + str(i) + "distance: " + str(distance))
             if (self.length > distance):
                 if (self.inbetween(p1,p2)):
                     if (collision<0):
                         collision = i
+                    elif (collision2<0):
+                        collision2 = i
                     else:
-                        print("stuck between two walls")
-                        return
+                        print("Stuck between 3 walls")
         if (collision>-1):
-            print("colliding wall " + str(collision))
+            #print("colliding wall " + str(collision))
             v1 = obstacleList[collision].endLoc - obstacleList[collision].startLoc
             v2 = [self.nextX - self.xCoord, self.nextY - self.yCoord]
             angle = np.degrees(np.arccos(np.dot(v1,v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))))
-            print("angle: " + str(angle))
+            #print("angle: " + str(angle))
 
             newV = v1 / np.linalg.norm(v1)
             newV *= np.cos(np.radians(angle))
             self.nextX = self.xCoord + newV[0]
             self.nextY = self.yCoord + newV[1]
 
+        if (collision2>-1):
+            print("colliding wall2 " + str(collision2))
+            v1 = obstacleList[collision2].endLoc - obstacleList[collision2].startLoc
+            v2 = [self.nextX - self.xCoord, self.nextY - self.yCoord]
+            angle = np.degrees(np.arccos(np.dot(v1,v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))))
+            #print("angle: " + str(angle))
+
+            newV = v1 / np.linalg.norm(v1)
+            newV *= np.cos(np.radians(angle))
+            self.nextX = self.xCoord + newV[0]
+            self.nextY = self.yCoord + newV[1]
+
+            p1 = np.array(obstacleList[collision].startLoc)
+            p2 = np.array(obstacleList[collision].endLoc)
+            p3 = np.array([self.nextX, self.nextY])
+            distance = np.linalg.norm(np.cross(p2 - p1, p3-p1))/np.linalg.norm(p2-p1)
+            if (self.length > distance):
+                self.nextX = 0
+                self.nextX = 0
+
         self.xCoord = self.nextX
         self.yCoord = self.nextY
-        
+
+   
+    
     def inbetween(self,p1,p2):
         if (p1[0]<p2[0]):
             x1 = p1[0]

@@ -81,14 +81,14 @@ def init():
 def initMap():
     global obstacleList
 
-    thickness = 10
-    obstacleList.append(Obstacle([0, 0], [0, screenHeight]))
-    obstacleList.append(Obstacle([0, screenHeight], [screenWidth, screenHeight]))
-    obstacleList.append(Obstacle([screenWidth, screenHeight], [screenWidth, 0]))
-    obstacleList.append(Obstacle([screenWidth, 0], [0, 0]))
+    thickness = 5
+    obstacleList.append(Obstacle([0, 0], [0, screenHeight], thickness))
+    obstacleList.append(Obstacle([0, screenHeight], [screenWidth, screenHeight], thickness))
+    obstacleList.append(Obstacle([screenWidth, screenHeight], [screenWidth, 0], thickness))
+    obstacleList.append(Obstacle([screenWidth, 0], [0, 0], thickness))
 
-    obstacleList.append(Obstacle([100, 40], [130, 100]))
-    obstacleList.append(Obstacle([240, 450], [200, 240]))
+    obstacleList.append(Obstacle([100, 40], [130, 100], thickness))
+    obstacleList.append(Obstacle([240, 450], [200, 240], thickness))
 
 
 def update():
@@ -234,10 +234,10 @@ def distanceToClosestObj(robotSensorDirX, robotSensorDirY, robotMiddleX, robotMi
                              obstacle.directionvector[1], obstacle.startLoc[0], obstacle.startLoc[1],
                              )
         dist = dist * circleRadius
-        print("DISTANCE: " + str(dist))
+        #print("DISTANCE: " + str(dist))
         # only needs closest distance
         if dist < closestDist:
-            print("DISTANCE UPDATE: " + str(dist))
+            #print("DISTANCE UPDATE: " + str(dist))
             closestDist = dist
 
     return closestDist
@@ -271,8 +271,8 @@ def distanceToObj(robotDirX, robotDirY, robotMiddleX, robotMiddleY, wallDirX, wa
         # s = x of sensor line
         s = (g * wallDirY + wallStartY - robotMiddleY) / robotDirY
         # g = (s * robotDirX + robotMiddleX - wallStartX) / wallDirX
-        print("s: = " + str(s) + ", g: " + str(g))
-    print("S: " + str(s))
+        #print("s: = " + str(s) + ", g: " + str(g))
+    #print("S: " + str(s))
     if g < 0 or g > 1:
         return 100
 
@@ -287,7 +287,7 @@ def addObstacle():
     for obstacle in obstacleList:
         obstacleObj = pygame.draw.line(screen, black,
                                        (obstacle.startLoc[0], obstacle.startLoc[1]),
-                                       (obstacle.endLoc[0], obstacle.endLoc[1]), 5)
+                                       (obstacle.endLoc[0], obstacle.endLoc[1]), obstacle.thickness)
         # screen.blit(screen, obstacleObj)
 
 
