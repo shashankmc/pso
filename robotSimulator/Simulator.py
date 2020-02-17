@@ -215,8 +215,8 @@ def robotSensor2():
                         robot.yCoord + np.sin(robot.forwardAngle + addAngle) * 3 * circleRadius]
         pygame.draw.line(screen, blue, start_location, end_location, 2)
         if i ==0:
-            pygame.draw.line(screen, white, (robot.xCoord, robot.yCoord), 
-                         (end_location[0] - circleRadius, end_location[1] - circleRadius), 2)
+            pygame.draw.line(screen, black, (robot.xCoord, robot.yCoord), 
+                         ((end_location[0]), end_location[1]), 2)
         dist = math.hypot(start_location[0] - end_location[0], start_location[1] - end_location[1])
         distToObj = distanceToClosestObj(start_location[0] - robot.xCoord,
                                          start_location[1] - robot.yCoord, robot.xCoord,
