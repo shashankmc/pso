@@ -65,6 +65,7 @@ def init():
     # the circle created will represent the object or robot which will move based on key inputs
     # the parameters for drawing a circle are these - (Surface, color, pos, radius, width=0)
     circleObj = pygame.draw.circle(circleSurf, red, (x, y), circleRadius)
+    # circleObj = pygame.draw.line(circleSurf, black, (x,y),(x + circleRadius, y), 4)
     screen.blit(screen, circleObj)
     # addObstacle()
     # for obstacle in obstacleList:
@@ -203,7 +204,7 @@ def robotSensor():
 
 
 def robotSensor2():
-    global circelSurf
+    global circleSurf
     addAngle = 0
     for i in range(0, 12):
         start_location = [robot.xCoord + np.cos(robot.forwardAngle + addAngle) * circleRadius,
@@ -213,6 +214,9 @@ def robotSensor2():
         end_location = [robot.xCoord + np.cos(robot.forwardAngle + addAngle) * 3 * circleRadius,
                         robot.yCoord + np.sin(robot.forwardAngle + addAngle) * 3 * circleRadius]
         pygame.draw.line(screen, blue, start_location, end_location, 2)
+        if i ==0:
+            pygame.draw.line(screen, white, (robot.xCoord, robot.yCoord), 
+                         (end_location[0] - circleRadius, end_location[1] - circleRadius), 2)
         dist = math.hypot(start_location[0] - end_location[0], start_location[1] - end_location[1])
         distToObj = distanceToClosestObj(start_location[0] - robot.xCoord,
                                          start_location[1] - robot.yCoord, robot.xCoord,
