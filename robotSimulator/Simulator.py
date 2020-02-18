@@ -1,8 +1,8 @@
 ####################################################################
-Assignment: Robot Simulator                                        #
-Group: Group 18                                                    #
-Members: Yannick Ruppenthal, Arthur Willems, Shashank Chakravarthy #
-Who did what: Everybody was involved in almost all functions       #
+# Assignment: Robot Simulator                                        #
+# Group: Group 18                                                    #
+# Members: Yannick Ruppenthal, Arthur Willems, Shashank Chakravarthy #
+# Who did what: Everybody was involved in almost all functions       #
 ####################################################################
 from pygame.locals import *
 import pygame
