@@ -32,7 +32,7 @@ obstacleList: any
 obstacleSurf: any
 clock: any
 font_obj: any
-FPS = 20
+FPS = 40
 
 
 def init():
@@ -56,16 +56,17 @@ def init():
     font_obj = pygame.font.Font('freesansbold.ttf', 11)
 
     # setup a surface for the circle to displayed on
-    circleSurf = pygame.Surface(((2 * circleRadius), (2 * circleRadius)))
+    circleSurf = pygame.Surface(((2 * circleRadius), (2 * circleRadius)), pygame.SRCALPHA)
     # make the background white in color
-    circleSurf.fill(white)
+    circleSurf.fill((255, 255, 255, 0))
     # setting the initial position
     x = circleRadius
     y = circleRadius
     # the circle created will represent the object or robot which will move based on key inputs
     # the parameters for drawing a circle are these - (Surface, color, pos, radius, width=0)
     circleObj = pygame.draw.circle(circleSurf, red, (x, y), circleRadius)
-    # circleObj = pygame.draw.line(circleSurf, black, (x,y),(x + circleRadius, y), 4)
+    # font_obj.render(str(robot.vLeft), False, black)
+    # screen.blit(circleSurf, (robot.xCoord + 100, robot.yCoord + 100))
     screen.blit(screen, circleObj)
     # addObstacle()
     # for obstacle in obstacleList:
@@ -162,7 +163,8 @@ def move():
     robot.updateLocation(timeTick, obstacleList)
     addObstacle()
     screen.blit(circleSurf, (robot.xCoord - circleRadius, robot.yCoord - circleRadius))
-    robotSensor2()
+    robotSensor()
+    velOnScreen()
     pygame.display.update()
 
 
@@ -176,34 +178,8 @@ def checkCollision():
     print("update direction according to collision")
 
 
+
 def robotSensor():
-    global circleSurf
-
-    start_location = [robot.xCoord + np.cos(robot.forwardAngle) * circleRadius,
-                      robot.yCoord + np.sin(robot.forwardAngle) * circleRadius]
-    text_location = [robot.xCoord + np.cos(robot.forwardAngle) * 2 * circleRadius,
-                     robot.yCoord + np.sin(robot.forwardAngle) * 2 * circleRadius]
-    end_location = [robot.xCoord + np.cos(robot.forwardAngle) * 3 * circleRadius,
-                    robot.yCoord + np.sin(robot.forwardAngle) * 3 * circleRadius]
-    # start_location2 = [robot.xCoord + np.cos(robot.forwardAngle + 30) * circleRadius + circleRadius,
-    #                  robot.yCoord + np.sin(robot.forwardAngle + 30) * circleRadius + circleRadius]
-    # end_location2 = [robot.xCoord + np.cos(robot.forwardAngle + 30) * 3 * circleRadius + circleRadius,
-    #                robot.yCoord + np.sin(robot.forwardAngle + 30) * 3 * circleRadius + circleRadius]
-    # draw the line
-    pygame.draw.line(screen, blue, start_location, end_location, 2)
-    # pygame.draw.line(screen, blue, start_location2, end_location2, 2)
-    # display the distance between the robot and the object.
-    distToObj = distanceToClosestObj(start_location[0] - robot.xCoord,
-                                     start_location[1] - robot.yCoord, robot.xCoord,
-                                     robot.yCoord)
-
-    text_surface_obj = font_obj.render("%.2f" % round(distToObj, 2), True, black)
-    text_rect_obj = text_surface_obj.get_rect()
-    text_rect_obj.center = text_location
-    screen.blit(text_surface_obj, text_rect_obj)
-
-
-def robotSensor2():
     global circleSurf
     addAngle = 0
     for i in range(0, 12):
@@ -221,7 +197,7 @@ def robotSensor2():
         distToObj = distanceToClosestObj(start_location[0] - robot.xCoord,
                                          start_location[1] - robot.yCoord, robot.xCoord,
                                          robot.yCoord) - circleRadius
-        text_surface_obj = font_obj.render("%.2f" % round(distToObj, 2), True, black)
+        text_surface_obj = font_obj.render("%d" % int(distToObj), True, black)
         text_rect_obj = text_surface_obj.get_rect()
         text_rect_obj.center = (text_location)
         screen.blit(text_surface_obj, text_rect_obj)
@@ -294,6 +270,19 @@ def addObstacle():
                                        (obstacle.endLoc[0], obstacle.endLoc[1]), obstacle.thickness)
         # screen.blit(screen, obstacleObj)
 
+
+def velOnScreen():
+    font = pygame.font.Font('freesansbold.ttf', 12)
+    textLeft = ('Left wheel: ' + str(robot.vLeft))
+    textLeft = font.render(textLeft, True, black)
+    text_rect_obj = textLeft.get_rect()
+    text_rect_obj.center = ((robot.xCoord, robot.yCoord))
+    screen.blit(textLeft, (550, 10))
+    textRight = ('Right wheel: ' + str(robot.vRight))
+    textRight = font.render(textRight, True, black)
+    text_rect_obj = textRight.get_rect()
+    text_rect_obj.center = ((robot.xCoord, robot.yCoord))
+    screen.blit(textRight, (550, 25))
 
 init()
 while keepRunning:
