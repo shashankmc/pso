@@ -11,9 +11,10 @@ from Obstacle import Obstacle
 from Robot import Robot
 import numpy as np
 
+from pso.robotSimulator.Controller import Controller
+
 keepRunning = True
 timeTick = 0.1
-tickRate = 13.0
 robot: Robot
 circle: any
 obstacleList = []
@@ -22,8 +23,7 @@ screenWidth = 640
 screenHeight = 480
 # setting object radius
 circleRadius = 20
-# for every key stroke, the object moves as per the value of the radius.
-changePos = circleRadius
+
 # define colors
 white = (255, 255, 255)
 black = (0, 0, 0)
@@ -32,13 +32,16 @@ green = (0, 255, 0)
 blue = (0, 0, 255)
 
 screen: any
-
 circleSurf: any
 obstacleList: any
 obstacleSurf: any
 clock: any
 font_obj: any
 FPS = 40
+
+inputLayerN = 2
+hiddenLayerN = 3
+outputLayerN = 5
 
 
 def init():
@@ -71,8 +74,8 @@ def init():
     # the circle created will represent the object or robot which will move based on key inputs
     # the parameters for drawing a circle are these - (Surface, color, pos, radius, width=0)
     circleObj = pygame.draw.circle(circleSurf, red, (x, y), circleRadius)
-    # font_obj.render(str(robot.vLeft), False, black)
-    # screen.blit(circleSurf, (robot.xCoord + 100, robot.yCoord + 100))
+    # font_obj.render(str(robot.vWheels[0]), False, black)
+    # screen.blit(circleSurf, (robot.middleCoords[0] + 100, robot.middleCoords[1] + 100))
     screen.blit(screen, circleObj)
     # addObstacle()
     # for obstacle in obstacleList:
@@ -101,13 +104,11 @@ def initMap():
 
 def update():
     global clock
-    global tickRate
     global robot
     global obstacleList
     global FPS
 
     clock.tick(FPS)
-    # print(clock)
     pygame.display.flip()
 
     for event in pygame.event.get():
@@ -123,29 +124,27 @@ def handleInput():
     if keys[pygame.K_ESCAPE]:
         keepRunning = False
         return
-    if keys[pygame.K_w] and robot.xCoord > changePos:
+    if keys[pygame.K_w]:
         print("positive increment of left wheel motor speed")
         robot.leftWheelInc()
         return
-    if keys[pygame.K_s] and robot.yCoord < screenHeight - (2 * circleRadius):
+    if keys[pygame.K_s]:
         print("negative increment of left wheel motor speed")
         robot.leftWheelDec()
         return
 
-    if keys[pygame.K_d] and robot.xCoord < screenWidth - (2 * circleRadius):
+    if keys[pygame.K_d]:
         print('You just pressed d')
         return
-    if keys[pygame.K_a] and robot.xCoord > changePos:
+    if keys[pygame.K_a]:
         print('You just pressed a')
         return
     if keys[pygame.K_o]:
         print("positive increment of right wheel motor speed")
-        # robot.xCoord += changePos
         robot.rightWheelInc()
         return
     if keys[pygame.K_l]:
         print("negative increment of right wheel motor speed")
-        # robot.xCoord -= changePos
         robot.rightWheelDec()
         return
     if keys[pygame.K_x]:
@@ -160,136 +159,50 @@ def handleInput():
 
 
 def move():
-    global robotw
     global circleSurf
-    global circleObj
     global timeTick
+    print(timeTick)
     screen.fill(white)
-    # background.clamp_ip(screen)
     robot.updateLocation(timeTick, obstacleList)
-    addObstacle()
-    screen.blit(circleSurf, (robot.xCoord - circleRadius, robot.yCoord - circleRadius))
-    robotSensor()
-    velOnScreen()
+    screen.blit(circleSurf, (robot.middleCoords[0] - circleRadius, robot.middleCoords[1] - circleRadius))
+    displayObstacles()
+    displayRobotSensor()
+    displayVelocityOnScreen()
     pygame.display.update()
 
 
-def calculateNextPosition():
-    checkCollision()
-    print("calc next position")
-
-
-def checkCollision():
-    print("check collisions")
-    print("update direction according to collision")
-
-
-
-def robotSensor():
-    global circleSurf
-    addAngle = 0
-    for i in range(0, 12):
-        start_location = [robot.xCoord + np.cos(robot.forwardAngle + addAngle) * circleRadius,
-                          robot.yCoord + np.sin(robot.forwardAngle + addAngle) * circleRadius]
-        text_location = [robot.xCoord + np.cos(robot.forwardAngle + addAngle) * 4 * circleRadius,
-                         robot.yCoord + np.sin(robot.forwardAngle + addAngle) * 4 * circleRadius]
-        end_location = [robot.xCoord + np.cos(robot.forwardAngle + addAngle) * 3 * circleRadius,
-                        robot.yCoord + np.sin(robot.forwardAngle + addAngle) * 3 * circleRadius]
-        pygame.draw.line(screen, blue, start_location, end_location, 2)
-        if i ==0:
-            pygame.draw.line(screen, black, (robot.xCoord, robot.yCoord), 
-                         ((end_location[0]), end_location[1]), 2)
-        dist = math.hypot(start_location[0] - end_location[0], start_location[1] - end_location[1])
-        distToObj = distanceToClosestObj(start_location[0] - robot.xCoord,
-                                         start_location[1] - robot.yCoord, robot.xCoord,
-                                         robot.yCoord) - circleRadius
-        text_surface_obj = font_obj.render("%d" % int(distToObj), True, black)
+def displayRobotSensor():
+    for sensor in robot.sensorList:
+        pygame.draw.line(screen, sensor.color, sensor.start_location, sensor.end_location, 2)
+        text_surface_obj = font_obj.render("%d" % int(sensor.distance), True, black)
         text_rect_obj = text_surface_obj.get_rect()
-        text_rect_obj.center = (text_location)
+        text_rect_obj.center = sensor.text_location
         screen.blit(text_surface_obj, text_rect_obj)
-        addAngle += np.pi / 6
 
 
-def distanceToClosestObj(robotSensorDirX, robotSensorDirY, robotMiddleX, robotMiddleY):
-    global obstacleList
-    closestDist = 100000
-
-    for obstacle in obstacleList:
-        # gets distance to obstacle
-        dist = distanceToObj(robotSensorDirX, robotSensorDirY, robotMiddleX, robotMiddleY, obstacle.directionvector[0],
-                             obstacle.directionvector[1], obstacle.startLoc[0], obstacle.startLoc[1],
-                             )
-        dist = dist * circleRadius
-        #print("DISTANCE: " + str(dist))
-        # only needs closest distance
-        if dist < closestDist:
-            #print("DISTANCE UPDATE: " + str(dist))
-            closestDist = dist
-
-    return closestDist
-
-
-def distanceToObj(robotDirX, robotDirY, robotMiddleX, robotMiddleY, wallDirX, wallDirY, wallStartX, wallStartY):
-    if wallDirX == 0:
-        s = (wallStartX - robotMiddleX) / robotDirX
-        g = (s * robotDirY + robotMiddleY - wallStartY) / wallDirY
-
-    elif wallDirY == 0:
-        s = (wallStartY - robotMiddleY) / robotDirY
-        g = (s * robotDirX + robotMiddleX - wallStartX) / wallDirX
-
-    elif robotDirX == 0:
-        g = (robotMiddleX - wallStartX) / wallDirX
-        s = (g * wallDirY + wallStartY - robotMiddleY) / robotDirY
-
-    elif robotDirY == 0:
-        g = (robotMiddleY - wallStartY) / wallDirY
-        s = (g * wallDirX + wallStartX - robotMiddleX) / robotDirX
-
-
-    # if true than parallel
-    elif wallDirX * (robotDirY / wallDirY) == robotDirX:
-        return 100
-    else:
-        g = (((wallStartY - robotMiddleY) / robotDirY) * (robotDirX / wallDirX) + (
-                (robotMiddleX - wallStartX) / wallDirX)) / (1 - ((robotDirX * wallDirY) / (wallDirX * robotDirY)))
-        # s = ((wallStartY - robotMiddleY) / robotDirY) / (1 - ((robotDirX + robotMiddleX - wallStartX) / wallDirX))
-        # s = x of sensor line
-        s = (g * wallDirY + wallStartY - robotMiddleY) / robotDirY
-        # g = (s * robotDirX + robotMiddleX - wallStartX) / wallDirX
-        #print("s: = " + str(s) + ", g: " + str(g))
-    #print("S: " + str(s))
-    if g < 0 or g > 1:
-        return 100
-
-    # s is distance
-    if s < 0:
-        return 100
-    return s
-
-
-def addObstacle():
-    # screen.fill(white)
+def displayObstacles():
     for obstacle in obstacleList:
         obstacleObj = pygame.draw.line(screen, black,
                                        (obstacle.startLoc[0], obstacle.startLoc[1]),
                                        (obstacle.endLoc[0], obstacle.endLoc[1]), obstacle.thickness)
-        # screen.blit(screen, obstacleObj)
 
 
-def velOnScreen():
+def displayVelocityOnScreen():
     font = pygame.font.Font('freesansbold.ttf', 12)
-    textLeft = ('Left wheel: ' + str(robot.vLeft))
+    textLeft = ('Left wheel: ' + str(robot.vWheels[0]))
     textLeft = font.render(textLeft, True, black)
     text_rect_obj = textLeft.get_rect()
-    text_rect_obj.center = ((robot.xCoord, robot.yCoord))
+    text_rect_obj.center = ((robot.middleCoords[0], robot.middleCoords[1]))
     screen.blit(textLeft, (550, 10))
-    textRight = ('Right wheel: ' + str(robot.vRight))
+    textRight = ('Right wheel: ' + str(robot.vWheels[1]))
     textRight = font.render(textRight, True, black)
     text_rect_obj = textRight.get_rect()
-    text_rect_obj.center = ((robot.xCoord, robot.yCoord))
+    text_rect_obj.center = ((robot.middleCoords[0], robot.middleCoords[1]))
     screen.blit(textRight, (550, 25))
 
+
+c = Controller([inputLayerN, hiddenLayerN, outputLayerN])
+print(c.calc([12, 20]))
 init()
 while keepRunning:
     update()
