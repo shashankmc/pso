@@ -10,8 +10,8 @@ import math
 from Obstacle import Obstacle
 from Robot import Robot
 import numpy as np
-
-from pso.robotSimulator.Controller import Controller
+# from pso.robotSimulator.Controller import Controller
+from Controller import Controller
 
 keepRunning = True
 timeTick = 0.1
@@ -23,6 +23,9 @@ screenWidth = 640
 screenHeight = 480
 # setting object radius
 circleRadius = 20
+# setting grid margin, and blocks size
+marginSize = 30
+blockSize = 25
 
 # define colors
 white = (255, 255, 255)
@@ -30,6 +33,7 @@ black = (0, 0, 0)
 red = (255, 0, 0)
 green = (0, 255, 0)
 blue = (0, 0, 255)
+grey = (200, 200, 200)
 
 screen: any
 circleSurf: any
@@ -132,7 +136,6 @@ def handleInput():
         print("negative increment of left wheel motor speed")
         robot.leftWheelDec()
         return
-
     if keys[pygame.K_d]:
         print('You just pressed d')
         return
@@ -163,6 +166,7 @@ def move():
     global timeTick
     print(timeTick)
     screen.fill(white)
+    drawGrid()
     robot.updateLocation(timeTick, obstacleList)
     screen.blit(circleSurf, (robot.middleCoords[0] - circleRadius, robot.middleCoords[1] - circleRadius))
     displayObstacles()
@@ -201,7 +205,17 @@ def displayVelocityOnScreen():
     screen.blit(textRight, (550, 25))
 
 
-c = Controller([inputLayerN, hiddenLayerN, outputLayerN])
+def drawGrid():
+    global screen
+    # draw the grid
+    for i in range(0,screenWidth,blockSize):
+        i = i + 10
+        pygame.draw.line(screen, grey,(i,0),(i,screenHeight),1)
+    for j in range(0,screenHeight,blockSize):
+        j = j + 10
+        pygame.draw.line(screen, grey,(0,j), (screenWidth,j),1)
+
+c = Controller([inputLayerN, hiddenLayerN, outputLayerN], 10)
 print(c.calc([12, 20]))
 init()
 while keepRunning:
