@@ -14,7 +14,7 @@ class Controller:
         #we need a population of networks
         for ps in range(0, populationSize):
             weights = []
-            #networklayers
+            #networklayers111
             for layerLevel in range(1, len(layers)):
                 weights.append(np.random.rand(layers[layerLevel - 1] + self.bias, layers[layerLevel]))
             self.population.append(weights)
@@ -68,16 +68,51 @@ class Controller:
         self.population = crossMutation
 
     def crossMutation(self, reproducedNW):
-        print("wait and weight sounds similar")
+        ctm = 0.1 #chance to mutate
+        for i in range (reproducedNW.count):
+            if (random()>ctm):
+                continue
+            mutation = random()
+            mw = randomrange(0,reproducedNW.count,1) # random mutation partner
+            if (mutation<0.3):
+                #onepoint mutation
+
+                continue
+            if (mutation<0.6):
+                #uniform mutation
+                continue
+            else:
+                continue
+                #arithmetic mutation
         return reproducedNW
 
-    def reproducation(self, selectedNW):
-        print("f!#$ you")
-        return selectedNW
+    def reproduction(self, selectedNW):
+        newpopulation = selectedNW
+        while(newpopulation.count < newpopulationSize):
+            # don't have to check for end of array since it will increase with each loop
+            newpopulation.append(newpopulation[i])
+            i += 1
+        return newpopulation
 
     def selection(self, evalNW):
-        print("neither do it")
-        return evalNW
+        groupsize = 3
+        reproduce = 2
+        newpopulation = []
+        for i in range(0,self.populationSize / groupsize + 1,groupsize):
+            group = []
+            for j in range(groupsize):
+                if (i*groupsize + j < populationSize):
+                    group.append(population[groupsize*i + j])
+            #SelectionSort
+            for j in range(min(reproduce,group.count)):
+                for k in range(j,group.count):
+                    if (group[j]<group[k]):
+                        temp = group[j]
+                        group[j] = group[k]
+                        group[k] = temp
+            for j in range(min(reproduce, group.count)):
+                newpopulation.append(group[j])
+        return newpopulation
 
     def fit(self, network):
         print("I don t work")
