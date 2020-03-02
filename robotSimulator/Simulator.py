@@ -208,12 +208,13 @@ def displayVelocityOnScreen():
 def drawGrid():
     global screen
     # draw the grid
-    for i in range(0,screenWidth,blockSize):
+    for i in range(0, screenWidth, blockSize):
         i = i + 10
-        pygame.draw.line(screen, grey,(i,0),(i,screenHeight),1)
-    for j in range(0,screenHeight,blockSize):
+        pygame.draw.line(screen, grey, (i, 0), (i, screenHeight), 1)
+    for j in range(0, screenHeight, blockSize):
         j = j + 10
-        pygame.draw.line(screen, grey,(0,j), (screenWidth,j),1)
+        pygame.draw.line(screen, grey, (0, j), (screenWidth, j), 1)
+
 
 c = Controller([inputLayerN, hiddenLayerN, outputLayerN], 10)
 print(c.calc([12, 20]))

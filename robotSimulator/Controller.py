@@ -1,112 +1,164 @@
 import numpy as np
+from numpy.random.mtrand import random
+
+from pso.robotSimulator.Network import Network
 
 
 class Controller:
-
-    layersSizes: []
-    bias = 1
+    # layersSizes: []
+    # bias = 1
     populationSize = 1
-    population : np.array
+    population: [Network]
 
     def __init__(self, layers: [], populationSize):
         print("init: layers: " + str(layers))
         self.population = []
-        #we need a population of networks
+        # we need a population of networks
         for ps in range(0, populationSize):
-            weights = []
-            #networklayers111
-            for layerLevel in range(1, len(layers)):
-                weights.append(np.random.rand(layers[layerLevel - 1] + self.bias, layers[layerLevel]))
-            self.population.append(weights)
+            self.population.append(Network(layers))
 
+    # updates the weight matrix of connecting layerLevel and layerLevel -1
+    def train(self, inputValues):
 
-
-    def sigmoid(self, z):
-        return 1 / (1 + np.exp(-z))
-
-    def calc(self, inputValues: []):
-        resultAll = []
-        for weights in self.population:
-            #too lazy to look up how to throw an exception ^^
-            if len(inputValues) != len(weights[0]) - self.bias:
-                return -1
-
-            #adds a bias to the input array
-            res = np.append(np.array(inputValues), self.bias)
-
-            #iterates through the the wheigt matrices connecting layer n and n-1
-            for layerWeight in weights:
-                res = np.matmul(res, layerWeight)
-                res = self.sigmoid(res)
-                res = np.append(res, self.bias)
-
-            #adds the result vector of n-th network to resultAll
-            #removes the last entry as it is only the bias
-            resultAll.append(res[0:-1])
-
-        #resultVector of every network
-        return resultAll
-
-    #updates the weight matrix of connecting layerLevel and layerLevel -1
-    def train(self, layerLevel):
-
-        #position is index of the network, and value is fitness score
+        # position is index of the network, and value is fitness score
         evaluated = []
-        for nwWeights in self.population:
-            evaluated.append(self.fit(nwWeights))
+        for network in self.population:
+            resultFromInput = network.calc(inputValues)
+            fitnessScore = self.fit(resultFromInput)
+            evaluated.append(fitnessScore)
 
-        #create a selection with the evaluated list and self.population
-        selection = self.selection(evaluated)
+        # create a selection with the evaluated list and self.population
+        # results in a list of selected indexes
+        selection = self.tournamentSelection(evaluated)
+        print("Selection: " + str(selection))
+        # reproduces a new population with the selected indexes
+        # returns flatten weight list
+        reproduction = self.reproduction2(selection)
+        print("Reproduction: " + str(reproduction))
 
-        #reproduces a new population with the selected population
-        reproduction = self.reproduction(selection)
+        #reproduces the children with mixing from parents
+        crossover = self.crossover(reproduction)
+        print("Crossover: " + str(crossover))
 
-        #cross mutation because maybe we create spiderman
-        crossMutation = self.crossMutation(reproduction)
+        # cross mutation because maybe we create spiderman
+        crossMutation = self.mutation(crossover)
+        print("Cross Mutation: " + str(crossMutation))
+        # update the weights
+        for i in range(len(self.population)):
+            self.population[i].setWeightsAsList(crossMutation[i])
 
-        #update the weights
-        self.population = crossMutation
+    def crossover(self, reproducedNW):
+        resultArray = []
+        # Not sure if this works correctly
+        np.random.shuffle(reproducedNW)
 
-    def crossMutation(self, reproducedNW):
-        ctm = 0.1 #chance to mutate
-        for i in range (reproducedNW.count):
-            if (random()>ctm):
-                continue
-            mutation = random()
-            mw = randomrange(0,reproducedNW.count,1) # random mutation partner
-            if (mutation<0.3):
-                #onepoint mutation
+        #this needs to be randomized, as it is always the same
+        crossoverType = random()
 
-                continue
-            if (mutation<0.6):
-                #uniform mutation
-                continue
+        for i in range(len(reproducedNW)):
+            crossedNWs = []
+            # if multiple weights
+            mum: np.array = reproducedNW[i]
+            dad: np.array = reproducedNW[0]
+            if i < len(reproducedNW) - 1:
+                dad = reproducedNW[i + 1]
+
+            if crossoverType < 0.3:
+                # onepoint mutation
+                print("ONEPOINT")
+                cutIndex = np.random.randint(0, len(mum))
+                crossedNWs.extend(mum[0:cutIndex])
+                crossedNWs.extend(dad[cutIndex:])
+            elif crossoverType < 0.6:
+                print("other")
+                for j in range(len(mum)):
+                    if random() < 0.5:
+                        crossedNWs.append(mum[j])
+                    else:
+                        crossedNWs.append(dad[j])
+
             else:
+                print("ari")
+                crossedNWs.extend(mum[:])
+                #crossedNWs.append(np.add(mum, dad) / 2)
+
+            resultArray.append(crossedNWs)
+        return resultArray
+
+    def mutation(self, reproducedNW):
+        ctm = 0.1  # chance to mutate
+        for repNW in reproducedNW:
+            if random() > ctm:
                 continue
-                #arithmetic mutation
+            if len(repNW) <= 1:
+                print("Shoudln t happen, len: " + str(len(repNW)))
+                continue
+            index = np.random.randint(0, len(repNW))
+
+            if random() < 0.5:
+                repNW[index] = repNW[index] + 1
+            else:
+                repNW[index] = repNW[index] - 1
+
         return reproducedNW
+
+    def reproduction2(self, reproductionIndex):
+        reproduced = []
+        for i in range(len(self.population)):
+            reproduced.append(self.population[reproductionIndex[i]].getWeightsAsList())
+        return reproduced
 
     def reproduction(self, selectedNW):
         newpopulation = selectedNW
-        while(newpopulation.count < newpopulationSize):
+        while (newpopulation.count < self.newpopulationSize):
             # don't have to check for end of array since it will increase with each loop
             newpopulation.append(newpopulation[i])
             i += 1
         return newpopulation
 
+    def crossMutation(self, reproducedNW):
+        ctm = 0.1  # chance to mutate
+        for i in range(reproducedNW.count):
+            if (random() > ctm):
+                continue
+            mutation = random()
+            mw = randomrange(0, reproducedNW.count, 1)  # random mutation partner
+            if (mutation < 0.3):
+                # onepoint mutation
+
+                continue
+            if (mutation < 0.6):
+                # uniform mutation
+                continue
+            else:
+                continue
+                # arithmetic mutation
+        return reproducedNW
+
+    def tournamentSelection(self, fitScores: []):
+        k = 4
+        selection = []
+        for i in range(len(self.population)):
+            #returns k random elements of fitscores
+            tSel = np.random.choice(fitScores, size=k, replace=False)
+            #finds the index of the highest fit of tSel in fitScores
+            tSelIndex = np.where(fitScores == np.amax(tSel))
+            selection.append(tSelIndex[0][0])
+        return np.array(selection)
+
     def selection(self, evalNW):
         groupsize = 3
         reproduce = 2
         newpopulation = []
-        for i in range(0,self.populationSize / groupsize + 1,groupsize):
+        for i in range(0, self.populationSize / groupsize + 1, groupsize):
             group = []
             for j in range(groupsize):
-                if (i*groupsize + j < populationSize):
-                    group.append(population[groupsize*i + j])
-            #SelectionSort
-            for j in range(min(reproduce,group.count)):
-                for k in range(j,group.count):
-                    if (group[j]<group[k]):
+                if (i * groupsize + j < self.populationSize):
+                    group.append(self.population[groupsize * i + j])
+            # SelectionSort
+            for j in range(min(reproduce, group.count)):
+                for k in range(j, group.count):
+                    if (group[j] < group[k]):
                         temp = group[j]
                         group[j] = group[k]
                         group[k] = temp
@@ -116,4 +168,9 @@ class Controller:
 
     def fit(self, network):
         print("I don t work")
-        return network
+        return random()*10
+
+
+c = Controller([2, 4, 3], 10)
+for i in range(100):
+    c.train([1,2])
