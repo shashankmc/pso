@@ -1,5 +1,7 @@
 from random import random
-
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+from mpl_toolkits import mplot3d
 import numpy as np
 
 population: np.array
@@ -20,8 +22,17 @@ def rosenBrockFunc(x, y):
     return ((a - x) ** 2 + b * (y - x ** 2) ** 2)
 
 
+def rastriginFunc(x,y):
+    n = 2
+    sum = 10 * n
+    sum += (x ** 2 - 10 * np.cos(2 * np.pi * x))
+    sum += (y ** 2 - 10 * np.cos(2 * np.pi * y))
+    return sum
+
+
 def fit(point: tuple):
-    return 100 - rosenBrockFunc(point[0], point[1])
+    #return 100 - rosenBrockFunc(point[0], point[1])
+    return 100 - rastriginFunc(point[0], point[1])
 
 
 def tournamentSelection(fitScores: []):
@@ -102,7 +113,7 @@ def train():
     evaluated = []
     for tup in population:
         evaluated.append(fit(tup))
-
+        display()
 
     fitnessMean = np.mean(evaluated)
     print("FitnessMean: " + str(fitnessMean))
@@ -132,6 +143,30 @@ def train():
         population[i] = (crossMutation[i][0],crossMutation[i][1])
 
 
+def display():
+    global population
+    x = np.linspace(-2, 2, 100)
+    y = np.linspace(-2, 2, 100)
+
+    xx, yy = np.meshgrid(x, y)
+    # zz = rosenBrockFunc(xx, yy)
+    zz = rastriginFunc(xx, yy)
+
+    fig = plt.figure(0)
+    ax = plt.axes(projection='3d')
+    ax.plot_surface(xx, yy, zz, cmap='viridis', alpha=0.5)
+    #ax.set_title('Surface plot after ', iteration, ' generations')
+
+    for tup in population:
+        ax.scatter(tup[0], tup[1],
+                   #rosenBrockFunc(tup[0], tup[1]),
+                   rastriginFunc(tup[0], tup[1]),
+                   c='r', marker='o', alpha=0.5)
+    ax.view_init(60,35)
+    plt.pause(0.001)
+    
+
 init(10)
 while fitnessMean < 99:
     train()
+# plt.show()
