@@ -1,5 +1,7 @@
 from random import random
-
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+from mpl_toolkits import mplot3d
 import numpy as np
 
 population: np.array
@@ -19,9 +21,19 @@ def rosenBrockFunc(x, y):
     b = 100
     return ((a - x) ** 2 + b * (y - x ** 2) ** 2)
 
+def rastrigin(x, y):
+    n = 2
+    sum = 10 * n
+    sum += (x ** 2 - 10 * np.cos(2 * np.pi * x))
+    sum += (y ** 2 - 10 * np.cos(2 * np.pi * y))
+    return sum
+
 
 def fit(point: tuple):
     return 100 - rosenBrockFunc(point[0], point[1])
+
+def fit2(point: tuple):
+    return 100 - rastrigin(point[0], point[1])
 
 
 def tournamentSelection(fitScores: []):
@@ -101,37 +113,82 @@ def train():
     # position is index of the network, and value is fitness score
     evaluated = []
     for tup in population:
-        evaluated.append(fit(tup))
+        evaluated.append(fit2(tup))
 
 
     fitnessMean = np.mean(evaluated)
-    print("FitnessMean: " + str(fitnessMean))
+    #print("FitnessMean: " + str(fitnessMean))
 
-    print("\tFitnessScores: " + str(evaluated))
+    #print("\tFitnessScores: " + str(evaluated))
 
     # create a selection with the evaluated list and self.population
     # results in a list of selected indexes
     selection = tournamentSelection(evaluated)
-    print("\tSelection: " + str(selection))
+    #print("\tSelection: " + str(selection))
     # reproduces a new population with the selected indexes
     # returns flatten weight list
 
     repro = reproduction(selection)
-    print("\tReproduction: " + str(repro))
+    #print("\tReproduction: " + str(repro))
 
     # reproduces the children with mixing from parents
     crosso = crossover(repro)
-    print("\tCrossover: " + str(crosso))
+    #print("\tCrossover: " + str(crosso))
 
     # cross mutation because maybe we create spiderman
     crossMutation = mutation(crosso)
-    print("\tCross Mutation: " + str(crossMutation))
+    ##print("\tCross Mutation: " + str(crossMutation))
 
     # update the weights
     for i in range(len(population)):
         population[i] = (crossMutation[i][0],crossMutation[i][1])
 
+def average():
+    global population
+    sumx = 0
+    sumy = 0
+    for i in range(len(population)):
+        sumx += population[i][0]
+        sumy += population[i][1]
+    sumx /= len(population)
+    sumy /= len(population)
+    print("avg. X: " + str(sumx))
+    print("avg. Y: " + str(sumy))
+
+def display(loop):
+    # creates an array from -2 to 2 with 100 steps
+    x = np.linspace(-15, 15, 100)
+    y = np.linspace(-3, 3, 100)
+
+    # this meshgrid transform needed for plot
+    xx, yy = np.meshgrid(x, y)
+
+    # evaluating every z value for the variable grid
+    zz = rastrigin(xx, yy)
+
+    # plot stuff
+    fig = plt.figure(0)
+    ax = plt.axes(projection='3d')
+    ax.plot_surface(xx, yy, zz, cmap='viridis', alpha=0.5)
+    # ax.contour3D(xx, yy, zz, 50, cmap='binary')
+    ax.set_title('Surface plot after ' + str(loop) + " iteration(s)")
+    # Iterates over particle and adds a dot to ax for each current location location
+    for particle in population:
+        #ax.scatter(particle.location[0], particle.location[1], 2000, c='r', marker='x')
+        ax.scatter(particle[0], particle[1],
+                   rastrigin(particle[0], particle[1]),
+                   c='r', marker='>', alpha=0.5)
+    ax.view_init(60,35)
+    if(loop % 100 == 0):
+        plt.savefig('fig%d.png' %loop)
+    plt.pause(0.001)
 
 init(10)
-while fitnessMean < 99:
+loops = 0
+while (fitnessMean < 99 and loops < 1000):
     train()
+    loops += 1
+    display(loops)
+    print(loops)
+print("Fitness Mean: " + str(fitnessMean))
+average()
