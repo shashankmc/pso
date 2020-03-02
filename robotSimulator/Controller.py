@@ -170,6 +170,11 @@ class Controller:
         print("I don t work")
         return random()*10
 
+    def rosenBrockFunc(x, y):
+        a = 0
+        b = 100
+        return ((a - x) ** 2 + b * (y - x ** 2) ** 2)
+
 
 c = Controller([2, 4, 3], 10)
 for i in range(100):
