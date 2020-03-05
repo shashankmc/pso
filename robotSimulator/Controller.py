@@ -79,8 +79,8 @@ class Controller:
 
             else:
                 print("ari")
-                crossedNWs.extend(mum[:])
-                #crossedNWs.append(np.add(mum, dad) / 2)
+                blaa = (mum + dad) / 2
+                crossedNWs.extend(blaa.tolist())
 
             resultArray.append(crossedNWs)
         return resultArray
