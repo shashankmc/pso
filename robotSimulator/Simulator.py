@@ -129,7 +129,7 @@ def update():
 
     for robot in robots:
 
-        vs = controller.calc(robot.id, robot.inputSensors, robot.id)
+        vs = controller.calc(robot.id, robot.inputSensors)
         faktor = 25
         robot.setWheelSpeed(faktor * vs[0], faktor * vs[1])
         if robot.id == 1:
@@ -186,19 +186,21 @@ def move(robot: Robot):
     global circleSurf
     global circleObj
     global timeTick
-    screen.fill(white)
+
 
     # background.clamp_ip(screen)
     robot.updateLocation(timeTick, obstacleList)
     updateGrid(robot.xCoord, robot.yCoord, robot)
     if robot.id == 1:
+        screen.fill(white)
+        drawGrid()
         addObstacle()
         screen.blit(circleSurf, (robot.xCoord - circleRadius, robot.yCoord - circleRadius))
 
 
     displayRobotSensor(robot)  # didn t want to try to  mix up the sequence
     if robot.id == 1:
-        drawGrid()
+
         displayVelocityOnScreen(1)
         pygame.display.update()
 

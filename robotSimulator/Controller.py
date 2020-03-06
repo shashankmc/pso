@@ -187,5 +187,5 @@ class Controller:
         print("fit score: " + str(result))
         return result
 
-    def calc(self, ind, inputs, index):
-        return self.population[ind].calc(inputs, index)
+    def calc(self, ind, inputs):
+        return self.population[ind].calc(inputs, ind)

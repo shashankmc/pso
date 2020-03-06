@@ -14,7 +14,7 @@ class Network:
     def sigmoid(self, z):
         return 1 / (1 + np.exp(-z))
 
-    def calc(self, inputValues: [],ind):
+    def calc(self, inputValues: [], ind):
         res = np.append(np.array(inputValues), self.bias)
         for weights in self.weightMatrixList:
 
