@@ -15,7 +15,13 @@ class Robot:
 
     length = 0
 
-    def __init__(self, radius, startLoc: [], startVelo: []):
+    areaCovered = 0
+    wallBumps = 0
+    inputSensors:[]
+
+    id = 0
+
+    def __init__(self, radius, startLoc: [], startVelo: [], id):
         self.length = radius
         self.xCoord = startLoc[0]
         self.yCoord = startLoc[1]
@@ -26,12 +32,19 @@ class Robot:
 
         self.vLeft = startVelo[0]
         self.vRight = startVelo[1]
+        self.id = id
+        #self.inputSensors= [500,500,500,500,500,500,500,500,500,500,500,500,500,500,500,500]
+
     def __str__(self):
         msg = " Robot:\n"
         msg += "Robot location: x= " + str(self.xCoord) + ", y= " + str(self.yCoord) + "\n"
         msg += "Robot velocity: left= " + str(self.vLeft) + ", right= " + str(self.vRight) + "\n"
         msg += "Robot Facing: " + str(self.forwardAngle) + "\n"
         return msg
+
+    def setWheelSpeed(self, left, right):
+        self.vLeft = left
+        self.vRight = right
 
     def leftWheelInc(self):
         self.vLeft += 1
@@ -75,9 +88,11 @@ class Robot:
                     elif (collision2<0):
                         collision2 = i
                     else:
+                        self.wallBumps += 10000
                         print("Stuck between 3 walls")
         if (collision>-1):
             #print("colliding wall " + str(collision))
+            self.wallBumps += 100
             v1 = obstacleList[collision].endLoc - obstacleList[collision].startLoc
             v2 = [self.nextX - self.xCoord, self.nextY - self.yCoord]
             angle = np.degrees(np.arccos(np.dot(v1,v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))))
@@ -89,7 +104,8 @@ class Robot:
             self.nextY = self.yCoord + newV[1]
 
         if (collision2>-1):
-            print("colliding wall2 " + str(collision2))
+            self.wallBumps += 10000
+            #print("colliding wall2 " + str(collision2))
             v1 = obstacleList[collision2].endLoc - obstacleList[collision2].startLoc
             v2 = [self.nextX - self.xCoord, self.nextY - self.yCoord]
             angle = np.degrees(np.arccos(np.dot(v1,v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))))
@@ -134,7 +150,8 @@ class Robot:
         return (self.xCoord + self.length >= x1 and self.xCoord - self.length <= x2 and self.yCoord + self.length >= y1 and self.yCoord - self.length <= y2)
 
     def updateLocation(self, timeStep, obstacleList):
-
+        if self.id == 1:
+            print("Robot "+str(self.id)+ ", vLeft"+str(self.vLeft) +"vRight"+str(self.vRight))
         # In case vL and vR are equal the calc of R would throw and error /0
         # but in that case the direction is forward facing
         if self.vLeft == self.vRight:

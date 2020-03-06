@@ -5,10 +5,14 @@ from Obstacle import Obstacle
 from Robot import Robot
 import numpy as np
 
+from pso.robotSimulator.Controller import Controller
+from pso.robotSimulator.Stat import Stat
+
 keepRunning = True
 timeTick = 0.1
 tickRate = 13.0
-robot: Robot
+tick = 0
+
 circle: any
 obstacleList = []
 # setting screen width and height
@@ -38,20 +42,22 @@ clock: any
 font_obj: any
 FPS = 40
 
-visitedGrid = []
+visitedGrids = []
+robots: [Robot]
 
 
-def init():
-    global robot
+def init(popSize):
     global clock
     global circleSurf
     global circleObj
     global screen
     global font_obj
-    global visitedGrid
-
+    global visitedGrids
+    global robots
+    robots = []
     print("init Objects")
-    robot = Robot(circleRadius, [150, 300, 0], [0, 0])
+
+
     initMap()
 
     print("init display")
@@ -81,8 +87,13 @@ def init():
     # the function blit creates the initially drawing based on the settings
     FPS = 30
     clock = pygame.time.Clock()
+    visitedGrids = []
+    for i in range(popSize):
+        rob = Robot(circleRadius, [150, 300, 0], [0, 0], i)
+        robots.append(rob)
+        visitedGrids.append(np.full((64, 48), False))
+        displayRobotSensor(rob)
 
-    visitedGrid = np.full((64, 48), False)
 
     print("init end")
 
@@ -97,15 +108,16 @@ def initMap():
     obstacleList.append(Obstacle([screenWidth, 0], [0, 0], thickness))
 
     obstacleList.append(Obstacle([100, 40], [130, 100], thickness))
-    obstacleList.append(Obstacle([240, 450], [200, 240], thickness))
+    obstacleList.append(Obstacle([340, 450], [300, 240], thickness))
 
 
 def update():
     global clock
     global tickRate
-    global robot
+    global tick
     global obstacleList
     global FPS
+    global robots
 
     clock.tick(FPS)
     # print(clock)
@@ -115,8 +127,18 @@ def update():
         if event.type == pygame.KEYDOWN:
             handleInput()
 
-    move()
+    for robot in robots:
 
+        vs = controller.calc(robot.id, robot.inputSensors, robot.id)
+        faktor = 25
+        robot.setWheelSpeed(faktor * vs[0], faktor * vs[1])
+        if robot.id == 1:
+            print("robotss" + str(robot.vRight))
+        #robot.vRight = vs[0] * faktor
+        #robot.vLeft = vs[1] * faktor
+        move(robot)
+
+    tick += 1
 
 def handleInput():
     global keepRunning
@@ -124,77 +146,85 @@ def handleInput():
     if keys[pygame.K_ESCAPE]:
         keepRunning = False
         return
-    if keys[pygame.K_w] and robot.xCoord > changePos:
-        #print("positive increment of left wheel motor speed")
-        robot.leftWheelInc()
+    if keys[pygame.K_w] and robots[1].xCoord > changePos:
+        # print("positive increment of left wheel motor speed")
+        robots[1].leftWheelInc()
         return
-    if keys[pygame.K_s] and robot.yCoord < screenHeight - (2 * circleRadius):
-        #print("negative increment of left wheel motor speed")
-        robot.leftWheelDec()
+    if keys[pygame.K_s] and robots[1].yCoord < screenHeight - (2 * circleRadius):
+        # print("negative increment of left wheel motor speed")
+        robots[1].leftWheelDec()
         return
 
-    if keys[pygame.K_d] and robot.xCoord < screenWidth - (2 * circleRadius):
-        #print('You just pressed d')
+    if keys[pygame.K_d] and robots[1].xCoord < screenWidth - (2 * circleRadius):
+        # print('You just pressed d')
         return
-    if keys[pygame.K_a] and robot.xCoord > changePos:
-        #print('You just pressed a')
+    if keys[pygame.K_a] and robots[1].xCoord > changePos:
+        # print('You just pressed a')
         return
     if keys[pygame.K_o]:
-        #print("positive increment of right wheel motor speed")
+        # print("positive increment of right wheel motor speed")
         # robot.xCoord += changePos
-        robot.rightWheelInc()
+        robots[1].rightWheelInc()
         return
     if keys[pygame.K_l]:
-        #print("negative increment of right wheel motor speed")
+        # print("negative increment of right wheel motor speed")
         # robot.xCoord -= changePos
-        robot.rightWheelDec()
+        robots[1].rightWheelDec()
         return
     if keys[pygame.K_x]:
-        #print("both motor speeds are zero")
-        robot.bothWheelZero()
+        # print("both motor speeds are zero")
+        robots[1].bothWheelZero()
     if keys[pygame.K_t]:
-        #print("positive increment of both wheels’ motor speed")
-        robot.bothWheelInc()
+        # print("positive increment of both wheels’ motor speed")
+        robots[1].bothWheelInc()
     if keys[pygame.K_g]:
-        #print("negative increment of both wheels’ motor speed")
-        robot.bothWheelDec()
+        # print("negative increment of both wheels’ motor speed")
+        robots[1].bothWheelDec()
 
 
-def move():
-    global robotw
+def move(robot: Robot):
     global circleSurf
     global circleObj
     global timeTick
     screen.fill(white)
-    drawGrid()
+
     # background.clamp_ip(screen)
     robot.updateLocation(timeTick, obstacleList)
-    updateGrid(robot.xCoord, robot.yCoord)
-    addObstacle()
-    screen.blit(circleSurf, (robot.xCoord - circleRadius, robot.yCoord - circleRadius))
-    displayRobotSensor()
-    displayVelocityOnScreen()
-    pygame.display.update()
+    updateGrid(robot.xCoord, robot.yCoord, robot)
+    if robot.id == 1:
+        addObstacle()
+        screen.blit(circleSurf, (robot.xCoord - circleRadius, robot.yCoord - circleRadius))
 
 
-def updateGrid(xCoord, yCoord):
+    displayRobotSensor(robot)  # didn t want to try to  mix up the sequence
+    if robot.id == 1:
+        drawGrid()
+        displayVelocityOnScreen(1)
+        pygame.display.update()
+
+
+def updateGrid(xCoord, yCoord, robot):
     global circleSurf
-    global visitedGrid
-    xind = int(xCoord/10)
-    yind = int(yCoord/10)
-    visitedGrid[xind][yind] = True
+    global visitedGrids
+    visitedGrid = visitedGrids[robot.id]
+    xind = int(xCoord / 10)
+    yind = int(yCoord / 10)
+    visitedGrids[robot.id][xind][yind] = True
 
     numDust = np.sum(visitedGrid)
     dustLoc = np.nonzero(visitedGrid)
     for i in range(numDust):
-        pygame.draw.circle(screen, red, (dustLoc[0][i]*10, dustLoc[1][i]*10), 13)
+        if robot.id == 1:  # we draw only one robot
+            pygame.draw.circle(screen, red, (dustLoc[0][i] * 10, dustLoc[1][i] * 10), 13)
+    robot.areaCovered = numDust
 
-    print(numDust)
 
-
-def displayRobotSensor():
+def displayRobotSensor(robot):
     global circelSurf
+    global robots
+
     addAngle = 0
+    sensorValues = []
     for i in range(0, 12):
         start_location = [robot.xCoord + np.cos(robot.forwardAngle + addAngle) * circleRadius,
                           robot.yCoord + np.sin(robot.forwardAngle + addAngle) * circleRadius]
@@ -202,16 +232,19 @@ def displayRobotSensor():
                          robot.yCoord + np.sin(robot.forwardAngle + addAngle) * 4 * circleRadius]
         end_location = [robot.xCoord + np.cos(robot.forwardAngle + addAngle) * 3 * circleRadius,
                         robot.yCoord + np.sin(robot.forwardAngle + addAngle) * 3 * circleRadius]
-        pygame.draw.line(screen, blue, start_location, end_location, 2)
 
         distToObj = distanceToClosestObj(start_location[0] - robot.xCoord,
                                          start_location[1] - robot.yCoord, robot.xCoord,
                                          robot.yCoord) - circleRadius
-        text_surface_obj = font_obj.render("%.2f" % round(distToObj, 2), True, black)
-        text_rect_obj = text_surface_obj.get_rect()
-        text_rect_obj.center = (text_location)
-        screen.blit(text_surface_obj, text_rect_obj)
+        sensorValues.append(distToObj)
+        if robot.id == 1:
+            pygame.draw.line(screen, blue, start_location, end_location, 2)
+            text_surface_obj = font_obj.render("%.2f" % round(distToObj, 2), True, black)
+            text_rect_obj = text_surface_obj.get_rect()
+            text_rect_obj.center = (text_location)
+            screen.blit(text_surface_obj, text_rect_obj)
         addAngle += np.pi / 6
+    robot.inputSensors = sensorValues
 
 
 def distanceToClosestObj(robotSensorDirX, robotSensorDirY, robotMiddleX, robotMiddleY):
@@ -229,7 +262,8 @@ def distanceToClosestObj(robotSensorDirX, robotSensorDirY, robotMiddleX, robotMi
         if dist < closestDist:
             # print("DISTANCE UPDATE: " + str(dist))
             closestDist = dist
-
+    if(closestDist > 150):
+        return 150
     return closestDist
 
 
@@ -292,22 +326,70 @@ def drawGrid():
         pygame.draw.line(screen, grey, (0, j), (screenWidth, j), 1)
 
 
-def displayVelocityOnScreen():
+def displayVelocityOnScreen(ind):
+    global  robots
     font = pygame.font.Font('freesansbold.ttf', 12)
-    textLeft = ('Left wheel: ' + str(robot.vLeft))
+    textLeft = ('Left wheel: ' + str(robots[ind].vLeft))
     textLeft = font.render(textLeft, True, black)
     text_rect_obj = textLeft.get_rect()
-    text_rect_obj.center = ((robot.xCoord, robot.yCoord))
+    text_rect_obj.center = ((robots[ind].xCoord, robots[ind].yCoord))
     screen.blit(textLeft, (550, 10))
-    textRight = ('Right wheel: ' + str(robot.vRight))
+    textRight = ('Right wheel: ' + str(robots[ind].vRight))
     textRight = font.render(textRight, True, black)
     text_rect_obj = textRight.get_rect()
-    text_rect_obj.center = ((robot.xCoord, robot.yCoord))
+    text_rect_obj.center = (robots[ind].xCoord, robots[ind].yCoord)
     screen.blit(textRight, (550, 25))
 
 
-init()
+def getEvaluation():
+    global robots
+    stats = []
+    for robo in robots:
+        stats.append(Stat(robo.areaCovered, robo.wallBumps))
+    return stats
+
+def reset():
+    global robots
+    global visitedGrids
+    visitedGrids = []
+    print("Reset")
+    for robot in robots:
+        robot.yCoord = 300
+        robot.xCoord = 150
+        robot.forwardAngle = 1
+        visitedGrids.append(np.full((64, 48), False))
+
+
+# while working
+# simulate driving robot
+# driven by ann
+# multiple robots
+# same map just multiple robots -> for loop
+# different paths width or colros
+# instead of key strokes ann calc
+
+# feedback sensorinfos to continue steering
+# save fitness stats at the end
+
+# fitevaluate
+# area covered, collision?
+# reproduce
+# reproduction -> weights
+
+populationSize = 10
+init(populationSize)
+controller = Controller([12, 1, 2], populationSize)
+
+roundCount = 1
 while keepRunning:
-    update()
+    print("round number started: " + str(roundCount))
+    for i in range(1500):  # time for a simulation
+        update()
+    print("done emulating round: " + str(roundCount))
+
+    controller.setFitnessScores(getEvaluation())  # get stats for fitness function
+    controller.train()  # updates the weights
+    roundCount += 1
+    reset()
 
 pygame.quit()

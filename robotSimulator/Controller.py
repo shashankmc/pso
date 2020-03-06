@@ -2,6 +2,7 @@ import numpy as np
 from numpy.random.mtrand import random
 
 from pso.robotSimulator.Network import Network
+from pso.robotSimulator.Stat import Stat
 
 
 class Controller:
@@ -9,40 +10,52 @@ class Controller:
     # bias = 1
     populationSize = 1
     population: [Network]
+    fitnessScores: []
 
     def __init__(self, layers: [], populationSize):
         print("init: layers: " + str(layers))
         self.population = []
+        self.fitnessScores = []
         # we need a population of networks
         for ps in range(0, populationSize):
             self.population.append(Network(layers))
+            self.fitnessScores.append(0)
+
+    def setFitnessScores(self, statsInOrder: []):
+        self.fitnessScores = []
+        for pop in range(len(self.population)):
+            self.fitnessScores.append(self.fit(statsInOrder[pop]))
+        #print(self.fitnessScores)
 
     # updates the weight matrix of connecting layerLevel and layerLevel -1
-    def train(self, inputValues):
+    def train(self):
 
         # position is index of the network, and value is fitness score
-        evaluated = []
-        for network in self.population:
-            resultFromInput = network.calc(inputValues)
-            fitnessScore = self.fit(resultFromInput)
-            evaluated.append(fitnessScore)
+        # evaluated = []
+        # for network in self.population:
+        #    resultFromInput = network.calc(inputValues)
+        #    fitnessScore = self.fit(resultFromInput)
+        #    evaluated.append(fitnessScore)
 
+        ########################
+        # fitnessScores is set in the fitness score setter
+        ########################
         # create a selection with the evaluated list and self.population
         # results in a list of selected indexes
-        selection = self.tournamentSelection(evaluated)
-        print("Selection: " + str(selection))
+        selection = self.tournamentSelection(self.fitnessScores)
+        #print("Selection: " + str(selection))
         # reproduces a new population with the selected indexes
         # returns flatten weight list
         reproduction = self.reproduction2(selection)
-        print("Reproduction: " + str(reproduction))
+        #print("Reproduction: " + str(reproduction))
 
-        #reproduces the children with mixing from parents
+        # reproduces the children with mixing from parents
         crossover = self.crossover(reproduction)
-        print("Crossover: " + str(crossover))
+        #print("Crossover: " + str(crossover))
 
         # cross mutation because maybe we create spiderman
         crossMutation = self.mutation(crossover)
-        print("Cross Mutation: " + str(crossMutation))
+        #print("Cross Mutation: " + str(crossMutation))
         # update the weights
         for i in range(len(self.population)):
             self.population[i].setWeightsAsList(crossMutation[i])
@@ -52,7 +65,7 @@ class Controller:
         # Not sure if this works correctly
         np.random.shuffle(reproducedNW)
 
-        #this needs to be randomized, as it is always the same
+        # this needs to be randomized, as it is always the same
         crossoverType = random()
 
         for i in range(len(reproducedNW)):
@@ -65,12 +78,12 @@ class Controller:
 
             if crossoverType < 0.3:
                 # onepoint mutation
-                print("ONEPOINT")
+                #print("ONEPOINT")
                 cutIndex = np.random.randint(0, len(mum))
                 crossedNWs.extend(mum[0:cutIndex])
                 crossedNWs.extend(dad[cutIndex:])
             elif crossoverType < 0.6:
-                print("other")
+                #print("other")
                 for j in range(len(mum)):
                     if random() < 0.5:
                         crossedNWs.append(mum[j])
@@ -78,7 +91,7 @@ class Controller:
                         crossedNWs.append(dad[j])
 
             else:
-                print("ari")
+                #print("ari")
                 blaa = (mum + dad) / 2
                 crossedNWs.extend(blaa.tolist())
 
@@ -139,9 +152,9 @@ class Controller:
         k = 4
         selection = []
         for i in range(len(self.population)):
-            #returns k random elements of fitscores
+            # returns k random elements of fitscores
             tSel = np.random.choice(fitScores, size=k, replace=False)
-            #finds the index of the highest fit of tSel in fitScores
+            # finds the index of the highest fit of tSel in fitScores
             tSelIndex = np.where(fitScores == np.amax(tSel))
             selection.append(tSelIndex[0][0])
         return np.array(selection)
@@ -166,16 +179,13 @@ class Controller:
                 newpopulation.append(group[j])
         return newpopulation
 
-    def fit(self, network):
-        print("I don t work")
-        return random()*10
+    def fit(self, stat: Stat):
 
-    def rosenBrockFunc(x, y):
-        a = 0
-        b = 100
-        return ((a - x) ** 2 + b * (y - x ** 2) ** 2)
+        result = 2*stat.areaCovered**2 - stat.bumpedIntoWall *0.1
+        print("Stat: " + str(stat))
+        print("biw: " + str(stat.bumpedIntoWall *0.1) + ", area: " + str(2*stat.areaCovered**2))
+        print("fit score: " + str(result))
+        return result
 
-
-c = Controller([2, 4, 3], 10)
-for i in range(100):
-    c.train([1,2])
+    def calc(self, ind, inputs, index):
+        return self.population[ind].calc(inputs, index)

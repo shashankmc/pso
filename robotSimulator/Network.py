@@ -14,14 +14,15 @@ class Network:
     def sigmoid(self, z):
         return 1 / (1 + np.exp(-z))
 
-    def calc(self, inputValues: []):
+    def calc(self, inputValues: [],ind):
         res = np.append(np.array(inputValues), self.bias)
         for weights in self.weightMatrixList:
 
             res = np.matmul(res, weights)
             res = self.sigmoid(res)
             res = np.append(res, self.bias)
-
+        if ind == 1:
+            print(str(inputValues)+ "\n=>" +str(res))
         return res[0:-1]
 
     def getWeightsAsList(self):
@@ -40,5 +41,5 @@ class Network:
             size = oldMatrix.shape[0] * oldMatrix.shape[1]
             listOfMatrix = wList[indexx:size+indexx]
             indexx += size
-            print("reshape: " + str(listOfMatrix) + "\n from " + str(len(listOfMatrix))+ "\n to " + str(oldMatrix.shape))
+            #("reshape: " + str(listOfMatrix) + "\n from " + str(len(listOfMatrix))+ "\n to " + str(oldMatrix.shape))
             oldMatrix = np.reshape(listOfMatrix, oldMatrix.shape)
