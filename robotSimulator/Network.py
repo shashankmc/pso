@@ -4,6 +4,8 @@ from pandas import np
 class Network:
     weightMatrixList = []
     bias = 1
+    lastInput= []
+    lastOutput = []
 
     def __init__(self, layers: []):
         self.weightMatrixList = []
@@ -17,12 +19,15 @@ class Network:
     def calc(self, inputValues: [], ind):
         res = np.append(np.array(inputValues), self.bias)
         for weights in self.weightMatrixList:
-
             res = np.matmul(res, weights)
-            res = self.sigmoid(res)
+            #res = self.sigmoid(res)
             res = np.append(res, self.bias)
+
         if ind == 1:
-            print(str(inputValues)+ "\n=>" +str(res))
+            #print("Last Input: " + str(self.lastInput) + "\n=>" + str(self.lastOutput))
+            #print("New Input: "+str(inputValues)+ "\n=>" +str(res))
+            self.lastInput = inputValues
+            self.lastOutput = res
         return res[0:-1]
 
     def getWeightsAsList(self):

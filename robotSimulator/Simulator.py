@@ -130,7 +130,7 @@ def update():
     for robot in robots:
 
         vs = controller.calc(robot.id, robot.inputSensors)
-        faktor = 25
+        faktor = 5
         robot.setWheelSpeed(faktor * vs[0], faktor * vs[1])
         if robot.id == 1:
             print("robotss" + str(robot.vRight))
@@ -239,7 +239,7 @@ def displayRobotSensor(robot):
         distToObj = distanceToClosestObj(start_location[0] - robot.xCoord,
                                          start_location[1] - robot.yCoord, robot.xCoord,
                                          robot.yCoord) - circleRadius
-        sensorValues.append(distToObj)
+        sensorValues.append(distToObj / (150-circleRadius))
         if robot.id == 1:
             pygame.draw.line(screen, blue, start_location, end_location, 2)
             text_surface_obj = font_obj.render("%.2f" % round(distToObj, 2), True, black)
@@ -381,12 +381,12 @@ def reset():
 
 populationSize = 10
 init(populationSize)
-controller = Controller([12, 1, 2], populationSize)
+controller = Controller([12, 2], populationSize)
 
 roundCount = 1
 while keepRunning:
     print("round number started: " + str(roundCount))
-    for i in range(1500):  # time for a simulation
+    for i in range(1000):  # time for a simulation
         update()
     print("done emulating round: " + str(roundCount))
 
