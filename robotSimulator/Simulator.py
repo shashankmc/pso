@@ -190,13 +190,14 @@ def move(robot: Robot):
 
     # background.clamp_ip(screen)
     robot.updateLocation(timeTick, obstacleList)
-    updateGrid(robot.xCoord, robot.yCoord, robot)
+
     if robot.id == 1:
         screen.fill(white)
         drawGrid()
         addObstacle()
         screen.blit(circleSurf, (robot.xCoord - circleRadius, robot.yCoord - circleRadius))
 
+    updateGrid(robot.xCoord, robot.yCoord, robot)
 
     displayRobotSensor(robot)  # didn t want to try to  mix up the sequence
     if robot.id == 1:
