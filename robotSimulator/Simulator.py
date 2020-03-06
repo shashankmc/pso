@@ -63,9 +63,9 @@ def init():
     font_obj = pygame.font.Font('freesansbold.ttf', 11)
 
     # setup a surface for the circle to displayed on
-    circleSurf = pygame.Surface(((2 * circleRadius), (2 * circleRadius)))
+    circleSurf = pygame.Surface(((2 * circleRadius), (2 * circleRadius)), pygame.SRCALPHA)
     # make the background white in color
-    circleSurf.fill(white)
+    circleSurf.fill((255, 255, 255, 0))
     # setting the initial position
     x = circleRadius
     y = circleRadius
@@ -187,7 +187,7 @@ def updateGrid(xCoord, yCoord):
     numDust = np.sum(visitedGrid)
     dustLoc = np.nonzero(visitedGrid)
     for i in range(numDust):
-        pygame.draw.circle(screen, red, (dustLoc[0][i]*10, dustLoc[1][i]*10), 10)
+        pygame.draw.circle(screen, red, (dustLoc[0][i]*10, dustLoc[1][i]*10), 13)
 
     print(numDust)
 
