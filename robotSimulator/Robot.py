@@ -16,8 +16,10 @@ class Robot:
     length = 0
 
     areaCovered = 0
-    wallBumps = 0
-    inputSensors:[]
+    wallBumps: []
+    inputSensors: []
+
+    leftRightRatio:[]
 
     id = 0
 
@@ -33,7 +35,11 @@ class Robot:
         self.vLeft = startVelo[0]
         self.vRight = startVelo[1]
         self.id = id
-        #self.inputSensors= [500,500,500,500,500,500,500,500,500,500,500,500,500,500,500,500]
+        #stats for fitness, [turningleft, straight, turningRight]
+        self.leftRightRatio = [0,0,0]
+        #stats for fitness, [1 collicion, 2 collisions, 3 collisions]
+        self.wallBumps = [0,0,0]
+        # self.inputSensors= [500,500,500,500,500,500,500,500,500,500,500,500,500,500,500,500]
 
     def __str__(self):
         msg = " Robot:\n"
@@ -45,6 +51,17 @@ class Robot:
     def setWheelSpeed(self, left, right):
         self.vLeft = left
         self.vRight = right
+        #left right ratio,
+        # if left turn ratio above 0
+        # if right turn ratio below 0
+        # if straight ratio close to 0
+        ratio = (left - right)/(left + right)
+        if  -0.05 < ratio< 0.05:
+            self.leftRightRatio[1] += 1
+        elif ratio < -0.05:
+            self.leftRightRatio[2] += 1
+        else:
+            self.leftRightRatio[0] += 1
 
     def leftWheelInc(self):
         self.vLeft += 1
@@ -78,38 +95,38 @@ class Robot:
             p1 = np.array(obstacleList[i].startLoc)
             p2 = np.array(obstacleList[i].endLoc)
             p3 = np.array([self.nextX, self.nextY])
-            distance = np.linalg.norm(np.cross(p2 - p1, p3-p1))/np.linalg.norm(p2-p1)
-            #print(self.length)
-            #print("wall " + str(i) + "distance: " + str(distance))
+            distance = np.linalg.norm(np.cross(p2 - p1, p3 - p1)) / np.linalg.norm(p2 - p1)
+            # print(self.length)
+            # print("wall " + str(i) + "distance: " + str(distance))
             if (self.length > distance):
-                if (self.inbetween(p1,p2)):
-                    if (collision<0):
+                if (self.inbetween(p1, p2)):
+                    if (collision < 0):
                         collision = i
-                    elif (collision2<0):
+                    elif (collision2 < 0):
                         collision2 = i
                     else:
-                        self.wallBumps += 10000
+                        self.wallBumps[2] += 1
                         print("Stuck between 3 walls")
-        if (collision>-1):
-            #print("colliding wall " + str(collision))
-            self.wallBumps += 100
+        if (collision > -1):
+            # print("colliding wall " + str(collision))
+            self.wallBumps[0] += 1
             v1 = obstacleList[collision].endLoc - obstacleList[collision].startLoc
             v2 = [self.nextX - self.xCoord, self.nextY - self.yCoord]
-            angle = np.degrees(np.arccos(np.dot(v1,v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))))
-            #print("angle: " + str(angle))
+            angle = np.degrees(np.arccos(np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))))
+            # print("angle: " + str(angle))
 
             newV = v1 / np.linalg.norm(v1)
             newV *= np.cos(np.radians(angle))
             self.nextX = self.xCoord + newV[0]
             self.nextY = self.yCoord + newV[1]
 
-        if (collision2>-1):
-            self.wallBumps += 10000
-            #print("colliding wall2 " + str(collision2))
+        if (collision2 > -1):
+            self.wallBumps[1] += 1
+            # print("colliding wall2 " + str(collision2))
             v1 = obstacleList[collision2].endLoc - obstacleList[collision2].startLoc
             v2 = [self.nextX - self.xCoord, self.nextY - self.yCoord]
-            angle = np.degrees(np.arccos(np.dot(v1,v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))))
-            #print("angle: " + str(angle))
+            angle = np.degrees(np.arccos(np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))))
+            # print("angle: " + str(angle))
 
             newV = v1 / np.linalg.norm(v1)
             newV *= np.cos(np.radians(angle))
@@ -119,7 +136,7 @@ class Robot:
             p1 = np.array(obstacleList[collision].startLoc)
             p2 = np.array(obstacleList[collision].endLoc)
             p3 = np.array([self.nextX, self.nextY])
-            distance = np.linalg.norm(np.cross(p2 - p1, p3-p1))/np.linalg.norm(p2-p1)
+            distance = np.linalg.norm(np.cross(p2 - p1, p3 - p1)) / np.linalg.norm(p2 - p1)
             if (self.length > distance):
                 self.nextX = 0
                 self.nextY = 0
@@ -127,31 +144,28 @@ class Robot:
         self.xCoord = self.nextX
         self.yCoord = self.nextY
 
-   
-    
-    def inbetween(self,p1,p2):
-        if (p1[0]<p2[0]):
+    def inbetween(self, p1, p2):
+        if (p1[0] < p2[0]):
             x1 = p1[0]
             x2 = p2[0]
         else:
             x1 = p2[0]
             x2 = p1[0]
 
-        if (p1[1]<p2[1]):
+        if (p1[1] < p2[1]):
             y1 = p1[1]
             y2 = p2[1]
         else:
             y1 = p2[1]
             y2 = p1[1]
-        if (x1==x2):
+        if (x1 == x2):
             return (self.yCoord + self.length >= y1 and self.yCoord - self.length <= y2)
-        if (y1==y2):
+        if (y1 == y2):
             return (self.xCoord + self.length >= x1 and self.xCoord - self.length <= x2)
-        return (self.xCoord + self.length >= x1 and self.xCoord - self.length <= x2 and self.yCoord + self.length >= y1 and self.yCoord - self.length <= y2)
+        return (
+                    self.xCoord + self.length >= x1 and self.xCoord - self.length <= x2 and self.yCoord + self.length >= y1 and self.yCoord - self.length <= y2)
 
     def updateLocation(self, timeStep, obstacleList):
-        if self.id == 1:
-            print("Robot "+str(self.id)+ ", vLeft"+str(self.vLeft) +"vRight"+str(self.vRight))
         # In case vL and vR are equal the calc of R would throw and error /0
         # but in that case the direction is forward facing
         if self.vLeft == self.vRight:
@@ -170,7 +184,7 @@ class Robot:
         R = 0.5 * self.length * (self.vLeft + self.vRight) / (self.vRight - self.vLeft)
         ICC = [self.xCoord - R * np.sin(self.forwardAngle), self.yCoord + R * np.cos(self.forwardAngle)]
         rotMat = [[np.cos(omega * timeStep), - np.sin(omega * timeStep), 0],
-                  [np.sin(omega * timeStep),   np.cos(omega * timeStep), 0],
+                  [np.sin(omega * timeStep), np.cos(omega * timeStep), 0],
                   [0, 0, 1]]
         difMat = [self.xCoord - ICC[0], self.yCoord - ICC[1], self.forwardAngle]
         addMat = [ICC[0], ICC[1], omega * timeStep]
@@ -181,4 +195,3 @@ class Robot:
         self.forwardAngle = result[2]
 
         self.collisionstuff(obstacleList)
-

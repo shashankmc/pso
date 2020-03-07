@@ -109,9 +109,9 @@ class Controller:
             index = np.random.randint(0, len(repNW))
 
             if random() < 0.5:
-                repNW[index] = repNW[index] + 1
+                repNW[index] = -repNW[index]
             else:
-                repNW[index] = repNW[index] - 1
+                repNW[index] = 2*repNW[index]
 
         return reproducedNW
 
@@ -180,10 +180,15 @@ class Controller:
         return newpopulation
 
     def fit(self, stat: Stat):
-
-        result = 2*stat.areaCovered**2 - stat.bumpedIntoWall *0.1
+        if stat.bumpedIntoWall[0] + stat.bumpedIntoWall[1]  + stat.bumpedIntoWall[2] > 0:
+            bump = 1 / (stat.bumpedIntoWall[0] + stat.bumpedIntoWall[1] * 10 + stat.bumpedIntoWall[2] * 100)
+        else:
+            bump = 1
+        area = stat.areaCovered**2/stat.maxArea**2
+        result = bump * area
         print("Stat: " + str(stat))
-        print("biw: " + str(stat.bumpedIntoWall *0.1) + ", area: " + str(2*stat.areaCovered**2))
+
+        print("biw: " + str(stat.bumpedIntoWall) + ", area: " + str(2*stat.areaCovered**2))
         print("fit score: " + str(result))
         return result
 

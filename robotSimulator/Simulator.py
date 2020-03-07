@@ -42,6 +42,7 @@ clock: any
 font_obj: any
 FPS = 40
 
+startingLocation = [150,300]
 visitedGrids = []
 robots: [Robot]
 
@@ -89,7 +90,7 @@ def init(popSize):
     clock = pygame.time.Clock()
     visitedGrids = []
     for i in range(popSize):
-        rob = Robot(circleRadius, [150, 300, 0], [0, 0], i)
+        rob = Robot(circleRadius, [startingLocation[0], startingLocation[1], 0], [0, 0], i)
         robots.append(rob)
         visitedGrids.append(np.full((64, 48), False))
         displayRobotSensor(rob)
@@ -128,14 +129,9 @@ def update():
             handleInput()
 
     for robot in robots:
-
         vs = controller.calc(robot.id, robot.inputSensors)
-        faktor = 5
+        faktor = 8
         robot.setWheelSpeed(faktor * vs[0], faktor * vs[1])
-        if robot.id == 1:
-            print("robotss" + str(robot.vRight))
-        #robot.vRight = vs[0] * faktor
-        #robot.vLeft = vs[1] * faktor
         move(robot)
 
     tick += 1
@@ -346,19 +342,23 @@ def displayVelocityOnScreen(ind):
 
 def getEvaluation():
     global robots
+
+
     stats = []
-    for robo in robots:
-        stats.append(Stat(robo.areaCovered, robo.wallBumps))
+    for robot in robots:
+        maxArea = 64*48
+        stats.append(Stat(robot.areaCovered, maxArea, robot.wallBumps, robot.leftRightRatio))
     return stats
 
 def reset():
     global robots
     global visitedGrids
+    global startingLocation
     visitedGrids = []
     print("Reset")
     for robot in robots:
-        robot.yCoord = 300
-        robot.xCoord = 150
+        robot.xCoord = startingLocation[0]
+        robot.yCoord = startingLocation[1]
         robot.forwardAngle = 1
         visitedGrids.append(np.full((64, 48), False))
 
@@ -386,7 +386,7 @@ controller = Controller([12, 2], populationSize)
 roundCount = 1
 while keepRunning:
     print("round number started: " + str(roundCount))
-    for i in range(1000):  # time for a simulation
+    for i in range(700):  # time for a simulation
         update()
     print("done emulating round: " + str(roundCount))
 
