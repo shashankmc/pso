@@ -379,7 +379,7 @@ def reset():
 # reproduce
 # reproduction -> weights
 
-populationSize = 10
+populationSize = 50
 init(populationSize)
 controller = Controller([12, 2], populationSize)
 

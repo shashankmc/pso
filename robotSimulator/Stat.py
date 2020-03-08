@@ -14,5 +14,5 @@ class Stat:
 
     def __str__(self):
         msg = "Area covered: " + str(self.areaCovered) + "\n WallCollisions: " + str(
-            self.bumpedIntoWall) + "\n Left Right Ratio: " + str(self.leftRightRatio)
+            self.bumpedIntoWall)+"\n Left Right Ratio: " + str(self.leftRightRatio)
         return msg

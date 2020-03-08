@@ -180,16 +180,15 @@ class Controller:
         return newpopulation
 
     def fit(self, stat: Stat):
-        if stat.bumpedIntoWall[0] + stat.bumpedIntoWall[1]  + stat.bumpedIntoWall[2] > 0:
-            bump = 1 / (stat.bumpedIntoWall[0] + stat.bumpedIntoWall[1] * 10 + stat.bumpedIntoWall[2] * 100)
-        else:
-            bump = 1
-        area = stat.areaCovered**2/stat.maxArea**2
-        result = bump * area
-        print("Stat: " + str(stat))
+        wallscore = stat.bumpedIntoWall[0]
+        areascore = stat.areaCovered
+        result = areascore - wallscore
 
-        print("biw: " + str(stat.bumpedIntoWall) + ", area: " + str(2*stat.areaCovered**2))
+
+        print("Stat: " + str(stat))
+        print("biw: " + str(stat.bumpedIntoWall) + ", area: " + str(stat.areaCovered))
         print("fit score: " + str(result))
+
         return result
 
     def calc(self, ind, inputs):

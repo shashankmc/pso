@@ -109,14 +109,14 @@ class Robot:
                     elif (collision2 < 0):
                         collision2 = i
                     else:
-                        if self.releaseFromCollision:
-                            self.wallBumps[2] += 1
-                            self.releaseFromCollision = False
+                        #if self.releaseFromCollision:
+                        self.wallBumps[2] += 1
+                        self.releaseFromCollision = False
                         print("Stuck between 3 walls")
         if (collision > -1):
-            if self.releaseFromCollision:
-                self.wallBumps[0] += 1
-                self.releaseFromCollision = False
+            #if self.releaseFromCollision:
+            self.wallBumps[0] += 1
+            self.releaseFromCollision = False
             # print("colliding wall " + str(collision))
             v1 = obstacleList[collision].endLoc - obstacleList[collision].startLoc
             v2 = [self.nextX - self.xCoord, self.nextY - self.yCoord]
@@ -129,9 +129,9 @@ class Robot:
             self.nextY = self.yCoord + newV[1]
 
         if (collision2 > -1):
-            if self.releaseFromCollision:
-                self.wallBumps[1] += 1
-                self.releaseFromCollision = False
+            #if self.releaseFromCollision:
+            self.wallBumps[1] += 1
+            self.releaseFromCollision = False
             # print("colliding wall2 " + str(collision2))
             v1 = obstacleList[collision2].endLoc - obstacleList[collision2].startLoc
             v2 = [self.nextX - self.xCoord, self.nextY - self.yCoord]
