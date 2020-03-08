@@ -2,6 +2,7 @@ import numpy as np
 
 
 class Robot:
+    speedMax = 40
     xCoord = 0
     yCoord = 0
     nextX = 0
@@ -12,17 +13,18 @@ class Robot:
 
     vLeft = 0
     vRight = 0
+    vLeftOld = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    vRightOld = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
     length = 0
 
     areaCovered = 0
     wallBumps: []
-    releaseFromCollision:bool
+    releaseFromCollision: bool
 
     inputSensors: []
 
-    leftRightRatio:[]
-
+    cappedOutput = [0, 0]
 
     id = 0
 
@@ -38,12 +40,11 @@ class Robot:
         self.vLeft = startVelo[0]
         self.vRight = startVelo[1]
         self.id = id
-        #stats for fitness, [turningleft, straight, turningRight]
-        self.leftRightRatio = [0,0,0]
-        #stats for fitness, [1 collicion, 2 collisions, 3 collisions]
-        self.wallBumps = [0,0,0]
+        # stats for fitness, [turningleft, straight, turningRight]
+        self.leftRightRatio = [0, 0, 0]
+        # stats for fitness, [1 collicion, 2 collisions, 3 collisions]
+        self.wallBumps = [0, 0, 0]
         self.releaseFromCollision = True
-
 
     def __str__(self):
         msg = " Robot:\n"
@@ -54,18 +55,19 @@ class Robot:
 
     def setWheelSpeed(self, left, right):
         self.vLeft = left
+        if left > self.speedMax:
+            self.vLeft = self.speedMax
+            self.cappedOutput[0] += 1
+
         self.vRight = right
-        #left right ratio,
-        # if left turn ratio above 0
-        # if right turn ratio below 0
-        # if straight ratio close to 0
-        ratio = (left - right)/(left + right)
-        if  -0.05 < ratio< 0.05:
-            self.leftRightRatio[1] += 1
-        elif ratio < -0.05:
-            self.leftRightRatio[2] += 1
-        else:
-            self.leftRightRatio[0] += 1
+        if right > self.speedMax:
+            self.vRight = self.speedMax
+            self.cappedOutput[1] += 1
+
+        self.vRightOld.pop(0)
+        self.vLeftOld.pop(0)
+        self.vRightOld.append(self.vRight / self.speedMax)
+        self.vLeftOld.append(self.vLeft / self.speedMax)
 
     def leftWheelInc(self):
         self.vLeft += 1
@@ -109,12 +111,12 @@ class Robot:
                     elif (collision2 < 0):
                         collision2 = i
                     else:
-                        #if self.releaseFromCollision:
+                        # if self.releaseFromCollision:
                         self.wallBumps[2] += 1
                         self.releaseFromCollision = False
                         print("Stuck between 3 walls")
         if (collision > -1):
-            #if self.releaseFromCollision:
+            # if self.releaseFromCollision:
             self.wallBumps[0] += 1
             self.releaseFromCollision = False
             # print("colliding wall " + str(collision))
@@ -129,7 +131,7 @@ class Robot:
             self.nextY = self.yCoord + newV[1]
 
         if (collision2 > -1):
-            #if self.releaseFromCollision:
+            # if self.releaseFromCollision:
             self.wallBumps[1] += 1
             self.releaseFromCollision = False
             # print("colliding wall2 " + str(collision2))
@@ -151,7 +153,6 @@ class Robot:
             if (self.length > distance):
                 self.nextX = self.xCoord
                 self.nextY = self.yCoord
-
 
         if collision < 0 and collision2 < 0:
             self.releaseFromCollision = True;
@@ -178,7 +179,7 @@ class Robot:
         if (y1 == y2):
             return (self.xCoord + self.length >= x1 and self.xCoord - self.length <= x2)
         return (
-                    self.xCoord + self.length >= x1 and self.xCoord - self.length <= x2 and self.yCoord + self.length >= y1 and self.yCoord - self.length <= y2)
+                self.xCoord + self.length >= x1 and self.xCoord - self.length <= x2 and self.yCoord + self.length >= y1 and self.yCoord - self.length <= y2)
 
     def updateLocation(self, timeStep, obstacleList):
         # In case vL and vR are equal the calc of R would throw and error /0

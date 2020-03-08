@@ -76,7 +76,7 @@ class Controller:
             if i < len(reproducedNW) - 1:
                 dad = reproducedNW[i + 1]
 
-            if crossoverType < 0.3:
+            if crossoverType < 0.4:
                 # onepoint mutation
                 #print("ONEPOINT")
                 cutIndex = np.random.randint(0, len(mum))
@@ -99,7 +99,7 @@ class Controller:
         return resultArray
 
     def mutation(self, reproducedNW):
-        ctm = 0.1  # chance to mutate
+        ctm = 0.5  # chance to mutate
         for repNW in reproducedNW:
             if random() > ctm:
                 continue
@@ -149,7 +149,7 @@ class Controller:
         return reproducedNW
 
     def tournamentSelection(self, fitScores: []):
-        k = 4
+        k = 8
         selection = []
         for i in range(len(self.population)):
             # returns k random elements of fitscores
@@ -180,9 +180,10 @@ class Controller:
         return newpopulation
 
     def fit(self, stat: Stat):
+
         wallscore = stat.bumpedIntoWall[0]
         areascore = stat.areaCovered
-        result = areascore - wallscore
+        result = areascore - wallscore - stat.cappedOutput[0] - stat.cappedOutput[1]
 
 
         print("Stat: " + str(stat))

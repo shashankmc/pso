@@ -42,7 +42,7 @@ clock: any
 font_obj: any
 FPS = 40
 
-startingLocation = [150,300]
+startingLocation = [150, 300]
 visitedGrids = []
 robots: [Robot]
 
@@ -57,7 +57,6 @@ def init(popSize):
     global robots
     robots = []
     print("init Objects")
-
 
     initMap()
 
@@ -95,7 +94,6 @@ def init(popSize):
         visitedGrids.append(np.full((64, 48), False))
         displayRobotSensor(rob)
 
-
     print("init end")
 
 
@@ -129,12 +127,15 @@ def update():
             handleInput()
 
     for robot in robots:
-        vs = controller.calc(robot.id, robot.inputSensors)
+        input = np.append(robot.inputSensors, [robot.vRightOld[0] - robot.vLeftOld[0]])
+        # input = np.append(robot.inputSensors, np.array(robot.oldInputs[0]))
+        vs = controller.calc(robot.id, input)
         faktor = 8
         robot.setWheelSpeed(faktor * vs[0], faktor * vs[1])
         move(robot)
 
     tick += 1
+
 
 def handleInput():
     global keepRunning
@@ -183,7 +184,6 @@ def move(robot: Robot):
     global circleObj
     global timeTick
 
-
     # background.clamp_ip(screen)
     robot.updateLocation(timeTick, obstacleList)
 
@@ -197,7 +197,6 @@ def move(robot: Robot):
 
     displayRobotSensor(robot)  # didn t want to try to  mix up the sequence
     if robot.id == 1:
-
         displayVelocityOnScreen(1)
         pygame.display.update()
 
@@ -208,7 +207,8 @@ def updateGrid(xCoord, yCoord, robot):
     visitedGrid = visitedGrids[robot.id]
     xind = int(xCoord / 10)
     yind = int(yCoord / 10)
-    visitedGrids[robot.id][xind][yind] = True
+    if 0 <= xind < 64 and 0 <= yind < 48:
+        visitedGrids[robot.id][xind][yind] = True
 
     numDust = np.sum(visitedGrid)
     dustLoc = np.nonzero(visitedGrid)
@@ -218,7 +218,7 @@ def updateGrid(xCoord, yCoord, robot):
     robot.areaCovered = numDust
 
 
-def displayRobotSensor(robot):
+def displayRobotSensor(robot: Robot):
     global circelSurf
     global robots
 
@@ -235,7 +235,7 @@ def displayRobotSensor(robot):
         distToObj = distanceToClosestObj(start_location[0] - robot.xCoord,
                                          start_location[1] - robot.yCoord, robot.xCoord,
                                          robot.yCoord) - circleRadius
-        sensorValues.append(distToObj / (150-circleRadius))
+        sensorValues.append(distToObj / (150 - circleRadius))
         if robot.id == 1:
             pygame.draw.line(screen, blue, start_location, end_location, 2)
             text_surface_obj = font_obj.render("%.2f" % round(distToObj, 2), True, black)
@@ -261,7 +261,7 @@ def distanceToClosestObj(robotSensorDirX, robotSensorDirY, robotMiddleX, robotMi
         if dist < closestDist:
             # print("DISTANCE UPDATE: " + str(dist))
             closestDist = dist
-    if(closestDist > 150):
+    if (closestDist > 150):
         return 150
     return closestDist
 
@@ -326,7 +326,7 @@ def drawGrid():
 
 
 def displayVelocityOnScreen(ind):
-    global  robots
+    global robots
     font = pygame.font.Font('freesansbold.ttf', 12)
     textLeft = ('Left wheel: ' + str(robots[ind].vLeft))
     textLeft = font.render(textLeft, True, black)
@@ -343,12 +343,12 @@ def displayVelocityOnScreen(ind):
 def getEvaluation():
     global robots
 
-
     stats = []
     for robot in robots:
-        maxArea = 64*48
-        stats.append(Stat(robot.areaCovered, maxArea, robot.wallBumps, robot.releaseFromCollision, robot.leftRightRatio))
+        maxArea = 64 * 48
+        stats.append(Stat(robot.areaCovered, maxArea, robot.wallBumps, robot.releaseFromCollision, robot.cappedOutput))
     return stats
+
 
 def reset():
     global robots
@@ -357,8 +357,8 @@ def reset():
     visitedGrids = []
     print("Reset")
     for robot in robots:
-        robot.xCoord = startingLocation[0]
-        robot.yCoord = startingLocation[1]
+        robot.xCoord = np.random.randint(50, 590)  # startingLocation[0]
+        robot.yCoord = np.random.randint(50, 430)  # startingLocation[1]
         robot.forwardAngle = 1
         visitedGrids.append(np.full((64, 48), False))
 
@@ -379,20 +379,23 @@ def reset():
 # reproduce
 # reproduction -> weights
 
-populationSize = 50
+populationSize = 20
+simulationDuration = 100
 init(populationSize)
-controller = Controller([12, 2], populationSize)
+controller = Controller([12 + 1, 2], populationSize)
 
 roundCount = 1
 while keepRunning:
     print("round number started: " + str(roundCount))
-    for i in range(700):  # time for a simulation
+    for i in range(simulationDuration):  # time for a simulation
         update()
     print("done emulating round: " + str(roundCount))
 
     controller.setFitnessScores(getEvaluation())  # get stats for fitness function
     controller.train()  # updates the weights
     roundCount += 1
+    if roundCount % 10 == 0:
+        simulationDuration += 100
     reset()
 
 pygame.quit()

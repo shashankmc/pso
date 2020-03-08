@@ -2,17 +2,17 @@ class Stat:
     areaCovered: 0
     maxArea: 1
     bumpedIntoWall: []
-    leftRightRatio: 1
     releaseFromWall: bool
+    cappedOutput:[]
 
-    def __init__(self, ac, ma, biw, rfw, lrr):
+    def __init__(self, ac, ma, biw, rfw, cop):
         self.maxArea = ac
         self.areaCovered = ac
         self.bumpedIntoWall = biw
         self.releaseFromWall = rfw
-        self.leftRightRatio = lrr
+        self.cappedOutput = cop
 
     def __str__(self):
         msg = "Area covered: " + str(self.areaCovered) + "\n WallCollisions: " + str(
-            self.bumpedIntoWall)+"\n Left Right Ratio: " + str(self.leftRightRatio)
+            self.bumpedIntoWall)+"\n Capped Outputs: " + str(self.cappedOutput)
         return msg
