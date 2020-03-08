@@ -17,9 +17,12 @@ class Robot:
 
     areaCovered = 0
     wallBumps: []
+    releaseFromCollision:bool
+
     inputSensors: []
 
     leftRightRatio:[]
+
 
     id = 0
 
@@ -39,7 +42,8 @@ class Robot:
         self.leftRightRatio = [0,0,0]
         #stats for fitness, [1 collicion, 2 collisions, 3 collisions]
         self.wallBumps = [0,0,0]
-        # self.inputSensors= [500,500,500,500,500,500,500,500,500,500,500,500,500,500,500,500]
+        self.releaseFromCollision = True
+
 
     def __str__(self):
         msg = " Robot:\n"
@@ -105,11 +109,15 @@ class Robot:
                     elif (collision2 < 0):
                         collision2 = i
                     else:
-                        self.wallBumps[2] += 1
+                        if self.releaseFromCollision:
+                            self.wallBumps[2] += 1
+                            self.releaseFromCollision = False
                         print("Stuck between 3 walls")
         if (collision > -1):
+            if self.releaseFromCollision:
+                self.wallBumps[0] += 1
+                self.releaseFromCollision = False
             # print("colliding wall " + str(collision))
-            self.wallBumps[0] += 1
             v1 = obstacleList[collision].endLoc - obstacleList[collision].startLoc
             v2 = [self.nextX - self.xCoord, self.nextY - self.yCoord]
             angle = np.degrees(np.arccos(np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))))
@@ -121,7 +129,9 @@ class Robot:
             self.nextY = self.yCoord + newV[1]
 
         if (collision2 > -1):
-            self.wallBumps[1] += 1
+            if self.releaseFromCollision:
+                self.wallBumps[1] += 1
+                self.releaseFromCollision = False
             # print("colliding wall2 " + str(collision2))
             v1 = obstacleList[collision2].endLoc - obstacleList[collision2].startLoc
             v2 = [self.nextX - self.xCoord, self.nextY - self.yCoord]
@@ -137,9 +147,14 @@ class Robot:
             p2 = np.array(obstacleList[collision].endLoc)
             p3 = np.array([self.nextX, self.nextY])
             distance = np.linalg.norm(np.cross(p2 - p1, p3 - p1)) / np.linalg.norm(p2 - p1)
+
             if (self.length > distance):
                 self.nextX = self.xCoord
                 self.nextY = self.yCoord
+
+
+        if collision < 0 and collision2 < 0:
+            self.releaseFromCollision = True;
 
         self.xCoord = self.nextX
         self.yCoord = self.nextY

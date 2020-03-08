@@ -347,7 +347,7 @@ def getEvaluation():
     stats = []
     for robot in robots:
         maxArea = 64*48
-        stats.append(Stat(robot.areaCovered, maxArea, robot.wallBumps, robot.leftRightRatio))
+        stats.append(Stat(robot.areaCovered, maxArea, robot.wallBumps, robot.releaseFromCollision, robot.leftRightRatio))
     return stats
 
 def reset():

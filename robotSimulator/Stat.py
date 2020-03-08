@@ -3,11 +3,13 @@ class Stat:
     maxArea: 1
     bumpedIntoWall: []
     leftRightRatio: 1
+    releaseFromWall: bool
 
-    def __init__(self, ac, ma, biw, lrr):
+    def __init__(self, ac, ma, biw, rfw, lrr):
         self.maxArea = ac
         self.areaCovered = ac
         self.bumpedIntoWall = biw
+        self.releaseFromWall = rfw
         self.leftRightRatio = lrr
 
     def __str__(self):
