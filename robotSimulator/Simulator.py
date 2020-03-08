@@ -392,6 +392,8 @@ while keepRunning:
     print("done emulating round: " + str(roundCount))
 
     controller.setFitnessScores(getEvaluation())  # get stats for fitness function
+    print("Current mean fitness score: " + str(controller.currentMeanScore) + ", highest mean fitness score: " + str(
+        controller.highestMeansScore))
     controller.train()  # updates the weights
     roundCount += 1
     if roundCount % 10 == 0:

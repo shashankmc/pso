@@ -11,6 +11,10 @@ class Controller:
     populationSize = 1
     population: [Network]
     fitnessScores: []
+    highestMeansScore = -10000
+    currentMeanScore = -10000
+    highestPopulation: [Network]
+
 
     def __init__(self, layers: [], populationSize):
         print("init: layers: " + str(layers))
@@ -25,6 +29,9 @@ class Controller:
         self.fitnessScores = []
         for pop in range(len(self.population)):
             self.fitnessScores.append(self.fit(statsInOrder[pop]))
+        self.currentMeanScore = np.mean(self.fitnessScores)
+        self.highestMeansScore = np.max( [self.currentMeanScore, self.highestMeansScore])
+
         #print(self.fitnessScores)
 
     # updates the weight matrix of connecting layerLevel and layerLevel -1
@@ -59,6 +66,7 @@ class Controller:
         # update the weights
         for i in range(len(self.population)):
             self.population[i].setWeightsAsList(crossMutation[i])
+        return self.currentMeanScore
 
     def crossover(self, reproducedNW):
         resultArray = []
@@ -149,7 +157,7 @@ class Controller:
         return reproducedNW
 
     def tournamentSelection(self, fitScores: []):
-        k = 8
+        k = 10
         selection = []
         for i in range(len(self.population)):
             # returns k random elements of fitscores
@@ -183,7 +191,7 @@ class Controller:
 
         wallscore = stat.bumpedIntoWall[0]
         areascore = stat.areaCovered
-        result = areascore - wallscore - stat.cappedOutput[0] - stat.cappedOutput[1]
+        result = areascore - wallscore + np.abs((stat.cappedOutput[0] - stat.cappedOutput[1]))
 
 
         print("Stat: " + str(stat))
