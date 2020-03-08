@@ -138,8 +138,8 @@ class Robot:
             p3 = np.array([self.nextX, self.nextY])
             distance = np.linalg.norm(np.cross(p2 - p1, p3 - p1)) / np.linalg.norm(p2 - p1)
             if (self.length > distance):
-                self.nextX = 0
-                self.nextY = 0
+                self.nextX = self.xCoord
+                self.nextY = self.yCoord
 
         self.xCoord = self.nextX
         self.yCoord = self.nextY

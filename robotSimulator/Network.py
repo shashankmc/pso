@@ -1,5 +1,4 @@
-from pandas import np
-
+import numpy as np
 
 class Network:
     weightMatrixList = []
@@ -48,3 +47,9 @@ class Network:
             indexx += size
             #("reshape: " + str(listOfMatrix) + "\n from " + str(len(listOfMatrix))+ "\n to " + str(oldMatrix.shape))
             oldMatrix = np.reshape(listOfMatrix, oldMatrix.shape)
+
+    def savenetwork(self, path):
+        np.savetxt(path, self.getWeightsAsList(), delimiter=',')
+
+    def loadnetwork(self, path):
+        self.setWeightsAsList(np.loadtxt(path, delimiter=','))
