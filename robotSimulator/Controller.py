@@ -41,7 +41,8 @@ class Controller:
         for nw in self.population:
             conc = nw.getWeightsAsList()
             for i in range(len(bestWList)):
-                if np.abs(bestWList[i] - conc[i]) > 0.01:
+                dis = np.abs(bestWList[i] - conc[i])
+                if dis > 0.001:
                     hamm += 1
         self.hammingDistance.append(hamm)
 
@@ -170,7 +171,7 @@ class Controller:
         return reproduced
 
     def tournamentSelection(self, fitScores: []):
-        k = 20
+        k = 10
         selection = []
         for i in range(len(self.population)):
             # returns k random elements of fitscores
@@ -183,7 +184,7 @@ class Controller:
     def fit(self, stat: Stat):
 
         wallscore = 1 - 1 / (1 + stat.bumpedIntoWall[0])
-        areascore = stat.areaCovered / stat.maxArea
+        areascore = 2 * stat.areaCovered / stat.maxArea
 
         dvC = np.mean(stat.dvCount)
 

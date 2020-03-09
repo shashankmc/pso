@@ -9,7 +9,7 @@ from pso.robotSimulator.Controller import Controller
 from pso.robotSimulator.Stat import Stat
 
 keepRunning = True
-timeTick = 0.3
+timeTick = 0.6
 tickRate = 13.0
 tick = 0
 
@@ -157,7 +157,7 @@ def update():
         # vs = vs * robot.speedMax
         # robot.setWheelSpeed(vs[0], vs[1])
 
-        faktor = robot.speedMax * 2
+        faktor = robot.speedMax
         robot.setWheelSpeed(faktor * vs[0], faktor * vs[1])
         move(robot)
 

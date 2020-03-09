@@ -48,13 +48,13 @@ class Network:
 
     def setWeightsAsList(self, wList:np.array):
         indexx = 0
-        for oldMatrix in self.weightMatrixList:
-
+        for counterFUCK in range(len(self.weightMatrixList)):
+            oldMatrix = self.weightMatrixList[counterFUCK]
             size = oldMatrix.shape[0] * oldMatrix.shape[1]
             listOfMatrix = wList[indexx:size+indexx]
             indexx += size
             #("reshape: " + str(listOfMatrix) + "\n from " + str(len(listOfMatrix))+ "\n to " + str(oldMatrix.shape))
-            oldMatrix = np.reshape(listOfMatrix, oldMatrix.shape)
+            self.weightMatrixList[counterFUCK] = np.reshape(listOfMatrix, oldMatrix.shape)
 
     def savenetwork(self, path):
         np.savetxt(path, self.getWeightsAsList(), delimiter=',')
