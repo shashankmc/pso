@@ -42,7 +42,7 @@ clock: any
 font_obj: any
 FPS = 40
 
-startingLocation = [[250, 300], [450, 300] ,[150, 150] ,[450, 400] ,[250, 50]]
+startingLocation = [[250, 300], [450, 300], [150, 150], [450, 400], [250, 50]]
 visitedGrids = []
 robots: [Robot]
 
@@ -146,19 +146,12 @@ def update():
             handleInput()
 
     for robot in robots:
-        #inpW = np.array([10, 5, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5])
-        inpW = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
-        input = np.append(robot.inputSensors * inpW, [robot.vRightOld[0] , robot.vLeftOld[0], 10* (robot.vRightOld[0] - robot.vLeftOld[0]) ])
-        # input = np.append(robot.inputSensors, np.array(robot.oldInputs[0]))
-        vs = controller.calc(robot.id, input)
+        inputs = np.append(robot.inputSensors,
+                          [robot.vRightOld[0], robot.vLeftOld[0], (robot.vRightOld[0] - robot.vLeftOld[0])])
+        vs = controller.calc(robot.id, inputs)
+        vs = vs * robot.speedMax / sum(vs)
 
-        vs = vs / sum(vs)
-        # vs = vs - 0.5
-        # vs = vs * robot.speedMax
-        # robot.setWheelSpeed(vs[0], vs[1])
-
-        faktor = robot.speedMax
-        robot.setWheelSpeed(faktor * vs[0], faktor * vs[1])
+        robot.setWheelSpeed(vs[0], vs[1])
         move(robot)
 
     tick += 1
@@ -176,7 +169,7 @@ def handleInput():
         return
     if keys[pygame.K_s]:
         # print("negative increment of left wheel motor speed")
-        #robots[1].leftWheelDec()
+        # robots[1].leftWheelDec()
         print("SAVING")
         controller.savePopulation("networkWeights/robotSave")
         return
@@ -195,7 +188,7 @@ def handleInput():
     if keys[pygame.K_l]:
         # print("negative increment of right wheel motor speed")
         # robot.xCoord -= changePos
-        #robots[1].rightWheelDec()
+        # robots[1].rightWheelDec()
         print("Loading")
         controller.loadPopulation("networkWeights/robotSave")
         reset()
@@ -379,7 +372,7 @@ def getEvaluation():
     stats = []
     for robot in robots:
         maxArea = 64 * 48
-        stats.append(Stat(robot.areaCovered, maxArea, robot.wallBumps, robot.releaseFromCollisionCount, robot.cappedOutput, robot.dvCount))
+        stats.append(Stat(robot.areaCovered, maxArea, robot.wallBumps, robot.dvCount))
     return stats
 
 
@@ -400,22 +393,6 @@ def reset():
         visitedGrids.append(np.full((64, 48), False))
 
 
-# while working
-# simulate driving robot
-# driven by ann
-# multiple robots
-# same map just multiple robots -> for loop
-# different paths width or colros
-# instead of key strokes ann calc
-
-# feedback sensorinfos to continue steering
-# save fitness stats at the end
-
-# fitevaluate
-# area covered, collision?
-# reproduce
-# reproduction -> weights
-
 populationSize = 40
 simulationDuration = 50
 init(populationSize)
@@ -429,7 +406,8 @@ while keepRunning:
     print("done emulating round: " + str(roundCount))
 
     controller.setFitnessScores(getEvaluation())  # get stats for fitness function
-    print("Current mean fitness score: " + str(controller.currentMeanScore[-4:-1]) + ", highest mean fitness score: " + str(
+    print("Current mean fitness score: " + str(
+        controller.currentMeanScore[-4:-1]) + ", highest mean fitness score: " + str(
         controller.highestMeansScore))
 
     print("Highest currentScore: " + str(controller.highestCurrentScore))

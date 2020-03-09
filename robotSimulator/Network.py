@@ -1,23 +1,18 @@
 import numpy as np
 
-
 class Network:
     weightMatrixList = []
     bias = 1
-    lastInput= []
+    lastInput = []
     lastOutput = []
 
     def __init__(self, layers: [], wml):
-        #self.weightMatrixList = []
-        #for layerLevel in range(1, len(layers)):
-        #    self.weightMatrixList.append(np.random.rand(layers[layerLevel - 1] + self.bias, layers[layerLevel]))
-        #self.weightMatrixList = np.array(self.weightMatrixList)
         self.weightMatrixList = wml
 
     def __init__(self, layers: []):
         self.weightMatrixList = []
         for layerLevel in range(1, len(layers)):
-            self.weightMatrixList.append(np.random.rand(layers[layerLevel - 1] + self.bias, layers[layerLevel])*2-1)
+            self.weightMatrixList.append(np.random.rand(layers[layerLevel - 1] + self.bias, layers[layerLevel]) * 2 - 1)
         self.weightMatrixList = np.array(self.weightMatrixList)
 
     def sigmoid(self, z):
@@ -31,8 +26,8 @@ class Network:
             res = np.append(res, self.bias)
 
         if ind == 1:
-            #print("Last Input: " + str(self.lastInput) + "\n=>" + str(self.lastOutput))
-            #print("New Input: "+str(inputValues)+ "\n=>" +str(res))
+            # print("Last Input: " + str(self.lastInput) + "\n=>" + str(self.lastOutput))
+            # print("New Input: "+str(inputValues)+ "\n=>" +str(res))
             self.lastInput = inputValues
             self.lastOutput = res
         return res[0:-1]
@@ -45,15 +40,14 @@ class Network:
 
         return np.array(flatten)
 
-
-    def setWeightsAsList(self, wList:np.array):
+    def setWeightsAsList(self, wList: np.array):
         indexx = 0
         for counterFUCK in range(len(self.weightMatrixList)):
             oldMatrix = self.weightMatrixList[counterFUCK]
             size = oldMatrix.shape[0] * oldMatrix.shape[1]
-            listOfMatrix = wList[indexx:size+indexx]
+            listOfMatrix = wList[indexx:size + indexx]
             indexx += size
-            #("reshape: " + str(listOfMatrix) + "\n from " + str(len(listOfMatrix))+ "\n to " + str(oldMatrix.shape))
+            # ("reshape: " + str(listOfMatrix) + "\n from " + str(len(listOfMatrix))+ "\n to " + str(oldMatrix.shape))
             self.weightMatrixList[counterFUCK] = np.reshape(listOfMatrix, oldMatrix.shape)
 
     def savenetwork(self, path):

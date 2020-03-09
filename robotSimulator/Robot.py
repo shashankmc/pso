@@ -13,21 +13,17 @@ class Robot:
 
     vLeft = 0
     vRight = 0
-    vLeftOld = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    vRightOld = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    vLeftOld = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    vRightOld = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
     length = 0
 
     areaCovered = 0
     wallBumps: []
-    releaseFromCollision: bool
-    releaseFromCollisionCount = 0
 
     inputSensors: []
 
-    cappedOutput = [0, 0]
-
-    dvCount=[]
+    dvCount = []
 
     id = 0
 
@@ -43,11 +39,9 @@ class Robot:
         self.vLeft = startVelo[0]
         self.vRight = startVelo[1]
         self.id = id
-        # stats for fitness, [turningleft, straight, turningRight]
-        self.leftRightRatio = [0, 0, 0]
+
         # stats for fitness, [1 collicion, 2 collisions, 3 collisions]
         self.wallBumps = [0, 0, 0]
-        self.releaseFromCollision = True
 
     def __str__(self):
         msg = " Robot:\n"
@@ -62,22 +56,19 @@ class Robot:
             self.vLeft = self.speedMax
             if left < 0:
                 self.vLeft *= -1
-            self.cappedOutput[0] += 1
 
         self.vRight = right
         if (-self.speedMax) > right > self.speedMax:
             self.vRight = self.speedMax
             if right < 0:
                 self.vRight *= -1
-            self.cappedOutput[1] += 1
 
         self.vRightOld.pop(0)
         self.vLeftOld.pop(0)
         self.vRightOld.append(self.vRight / self.speedMax)
         self.vLeftOld.append(self.vLeft / self.speedMax)
-        dvc = 1 - np.sqrt(np.abs(self.vRight - self.vLeft)/(np.abs(self.vLeft) + np.abs(self.vRight)))
+        dvc = 1 - np.sqrt(np.abs(self.vRight - self.vLeft) / (np.abs(self.vLeft) + np.abs(self.vRight)))
         self.dvCount.append(dvc)
-
 
     def leftWheelInc(self):
         self.vLeft += 1
@@ -121,14 +112,10 @@ class Robot:
                     elif (collision2 < 0):
                         collision2 = i
                     else:
-                        # if self.releaseFromCollision:
                         self.wallBumps[2] += 1
-                        self.releaseFromCollision = False
                         print("Stuck between 3 walls")
         if (collision > -1):
-            # if self.releaseFromCollision:
             self.wallBumps[0] += 1
-            self.releaseFromCollision = False
             # print("colliding wall " + str(collision))
             v1 = obstacleList[collision].endLoc - obstacleList[collision].startLoc
             v2 = [self.nextX - self.xCoord, self.nextY - self.yCoord]
@@ -141,9 +128,7 @@ class Robot:
             self.nextY = self.yCoord + newV[1]
 
         if (collision2 > -1):
-            # if self.releaseFromCollision:
             self.wallBumps[1] += 1
-            self.releaseFromCollision = False
             # print("colliding wall2 " + str(collision2))
             v1 = obstacleList[collision2].endLoc - obstacleList[collision2].startLoc
             v2 = [self.nextX - self.xCoord, self.nextY - self.yCoord]
@@ -163,10 +148,6 @@ class Robot:
             if (self.length > distance):
                 self.nextX = self.xCoord
                 self.nextY = self.yCoord
-
-        if collision < 0 and collision2 < 0:
-            self.releaseFromCollision = True;
-            self.releaseFromCollisionCount += 1;
 
         self.xCoord = self.nextX
         self.yCoord = self.nextY

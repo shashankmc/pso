@@ -59,8 +59,6 @@ class Controller:
 
         self.calcHammingDistance()
 
-        # print(self.fitnessScores)
-
     # updates the weight matrix of connecting layerLevel and layerLevel -1
     def train(self):
 
@@ -77,23 +75,20 @@ class Controller:
         # create a selection with the evaluated list and self.population
         # results in a list of selected indexes
         selection = self.tournamentSelection(self.fitnessScores)
-        # print("Selection: " + str(selection))
+
         # reproduces a new population with the selected indexes
         # returns flatten weight list
         reproduction = self.reproduction2(selection)
-        # print("Reproduction: " + str(reproduction))
 
         # reproduces the children with mixing from parents
         crossover = self.crossover(reproduction)
-        # print("Crossover: " + str(crossover))
 
         # cross mutation because maybe we create spiderman
         crossMutation = self.mutation(crossover)
-        # print("Cross Mutation: " + str(crossMutation))
+
         # update the weights
         for i in range(len(self.population)):
             self.population[i].setWeightsAsList(crossMutation[i])
-
 
         return self.currentMeanScore
 
@@ -115,7 +110,7 @@ class Controller:
             if i < len(reproducedNW) - 1:
                 dad = reproducedNW[i + 1]
 
-            if crossoverType < 0.4:
+            if crossoverType < 0.3:
                 # onepoint mutation
                 # print("ONEPOINT")
                 cutIndex = np.random.randint(0, len(mum))
@@ -152,14 +147,6 @@ class Controller:
                     repNW[index] = -repNW[index]
                 else:
                     repNW[index] = 2 * repNW[index]
-            #    wml = []
-            #    for layerLevel in range(1, len(self.layers)):
-            #        wml.append(np.random.rand(self.layers[layerLevel - 1] + 1, self.layers[layerLevel]) * 2 - 1)
-            #    wml = np.array(wml)
-            #    nw.weightMatrixList = wml
-            #    return
-
-
 
         return reproducedNW
 
@@ -187,7 +174,7 @@ class Controller:
 
 
 
-        dvC = np.mean(stat.dvCount)
+        #dvC = np.mean(stat.dvCount)
 
         #result = areascore - wallscore + dvC
 
