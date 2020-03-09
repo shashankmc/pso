@@ -9,7 +9,7 @@ from pso.robotSimulator.Controller import Controller
 from pso.robotSimulator.Stat import Stat
 
 keepRunning = True
-timeTick = 0.2
+timeTick = 0.3
 tickRate = 13.0
 tick = 0
 
@@ -42,7 +42,7 @@ clock: any
 font_obj: any
 FPS = 40
 
-startingLocation = [250, 300]
+startingLocation = [[250, 300], [450, 300] ,[150, 150] ,[450, 400] ,[250, 50]]
 visitedGrids = []
 robots: [Robot]
 
@@ -89,7 +89,7 @@ def init(popSize):
     clock = pygame.time.Clock()
     visitedGrids = []
     for i in range(popSize):
-        rob = Robot(circleRadius, [startingLocation[0], startingLocation[1], 0], [0, 0], i)
+        rob = Robot(circleRadius, [startingLocation[0][0], startingLocation[0][1], 0], [0, 0], i)
         robots.append(rob)
         visitedGrids.append(np.full((64, 48), False))
         displayRobotSensor(rob)
@@ -146,7 +146,8 @@ def update():
             handleInput()
 
     for robot in robots:
-        inpW = np.array([10, 5, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5])
+        #inpW = np.array([10, 5, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5])
+        inpW = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
         input = np.append(robot.inputSensors * inpW, [robot.vRightOld[0] , robot.vLeftOld[0], 10* (robot.vRightOld[0] - robot.vLeftOld[0]) ])
         # input = np.append(robot.inputSensors, np.array(robot.oldInputs[0]))
         vs = controller.calc(robot.id, input)
@@ -173,9 +174,11 @@ def handleInput():
         # print("positive increment of left wheel motor speed")
         robots[1].leftWheelInc()
         return
-    if keys[pygame.K_s] and robots[1].yCoord < screenHeight - (2 * circleRadius):
+    if keys[pygame.K_s]:
         # print("negative increment of left wheel motor speed")
-        robots[1].leftWheelDec()
+        #robots[1].leftWheelDec()
+        print("SAVING")
+        controller.savePopulation("networkWeights/robotSave")
         return
 
     if keys[pygame.K_d] and robots[1].xCoord < screenWidth - (2 * circleRadius):
@@ -192,7 +195,10 @@ def handleInput():
     if keys[pygame.K_l]:
         # print("negative increment of right wheel motor speed")
         # robot.xCoord -= changePos
-        robots[1].rightWheelDec()
+        #robots[1].rightWheelDec()
+        print("Loading")
+        controller.loadPopulation("networkWeights/robotSave")
+        reset()
         return
     if keys[pygame.K_x]:
         # print("both motor speeds are zero")
@@ -373,7 +379,7 @@ def getEvaluation():
     stats = []
     for robot in robots:
         maxArea = 64 * 48
-        stats.append(Stat(robot.areaCovered, maxArea, robot.wallBumps, robot.releaseFromCollisionCount, robot.cappedOutput))
+        stats.append(Stat(robot.areaCovered, maxArea, robot.wallBumps, robot.releaseFromCollisionCount, robot.cappedOutput, robot.dvCount))
     return stats
 
 
@@ -383,11 +389,11 @@ def reset():
     global startingLocation
     visitedGrids = []
     print("Reset")
-    randX = np.random.randint(50, 590)
-    randY = np.random.randint(50, 430)
+    startInd = np.random.randint(0, len(startingLocation))
+
     for robot in robots:
-        robot.xCoord = randX  # startingLocation[0]
-        robot.yCoord = randY  #
+        robot.xCoord = startingLocation[startInd][0]
+        robot.yCoord = startingLocation[startInd][1]
         robot.forwardAngle = 1
         visitedGrids.append(np.full((64, 48), False))
 
@@ -411,7 +417,7 @@ def reset():
 populationSize = 80
 simulationDuration = 50
 init(populationSize)
-controller = Controller([12 + 3, 4, 2], populationSize)
+controller = Controller([12 + 3, 2], populationSize)
 
 roundCount = 1
 while keepRunning:
@@ -421,8 +427,12 @@ while keepRunning:
     print("done emulating round: " + str(roundCount))
 
     controller.setFitnessScores(getEvaluation())  # get stats for fitness function
-    print("Current mean fitness score: " + str(controller.currentMeanScore) + ", highest mean fitness score: " + str(
+    print("Current mean fitness score: " + str(controller.currentMeanScore[-4:-1]) + ", highest mean fitness score: " + str(
         controller.highestMeansScore))
+
+    print("Highest currentScore: " + str(controller.highestCurrentScore))
+    print("Hamming Distance: " + str(controller.hammingDistance))
+
     controller.train()  # updates the weights
     roundCount += 1
     if roundCount % 10 == 0:

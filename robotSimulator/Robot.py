@@ -27,6 +27,8 @@ class Robot:
 
     cappedOutput = [0, 0]
 
+    dvCount=[]
+
     id = 0
 
     def __init__(self, radius, startLoc: [], startVelo: [], id):
@@ -73,6 +75,9 @@ class Robot:
         self.vLeftOld.pop(0)
         self.vRightOld.append(self.vRight / self.speedMax)
         self.vLeftOld.append(self.vLeft / self.speedMax)
+        dvc = 1 - np.sqrt(np.abs(self.vRight - self.vLeft)/(np.abs(self.vLeft) + np.abs(self.vRight)))
+        self.dvCount.append(dvc)
+
 
     def leftWheelInc(self):
         self.vLeft += 1
