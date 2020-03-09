@@ -395,6 +395,8 @@ def reset():
         robot.xCoord = startingLocation[startInd][0]
         robot.yCoord = startingLocation[startInd][1]
         robot.forwardAngle = 1
+        robot.wallBumps[0] = 0
+        robot.areaCovered = 0
         visitedGrids.append(np.full((64, 48), False))
 
 
@@ -414,10 +416,10 @@ def reset():
 # reproduce
 # reproduction -> weights
 
-populationSize = 80
+populationSize = 40
 simulationDuration = 50
 init(populationSize)
-controller = Controller([12 + 3, 2], populationSize)
+controller = Controller([12 + 3, 4, 2], populationSize)
 
 roundCount = 1
 while keepRunning:

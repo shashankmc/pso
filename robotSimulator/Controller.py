@@ -88,13 +88,13 @@ class Controller:
         # print("Crossover: " + str(crossover))
 
         # cross mutation because maybe we create spiderman
-        # crossMutation = self.mutation(crossover)
+        crossMutation = self.mutation(crossover)
         # print("Cross Mutation: " + str(crossMutation))
         # update the weights
         for i in range(len(self.population)):
-            self.population[i].setWeightsAsList(crossover[i])
+            self.population[i].setWeightsAsList(crossMutation[i])
 
-        crossMutation = self.mutation(crossover)
+
         return self.currentMeanScore
 
     def crossover(self, reproducedNW):
@@ -141,26 +141,25 @@ class Controller:
         ctm = 0.05  # chance to mutate
         for nw in self.population:
             if random() > ctm:
+                for repNW in reproducedNW:
+                    if random() > ctm:
+                        continue
+                if len(repNW) <= 1:
+                    print("Shoudln t happen, len: " + str(len(repNW)))
+                    continue
+                index = np.random.randint(0, len(repNW))
+                if random() < 0.5:
+                    repNW[index] = -repNW[index]
+                else:
+                    repNW[index] = 2 * repNW[index]
+            #    wml = []
+            #    for layerLevel in range(1, len(self.layers)):
+            #        wml.append(np.random.rand(self.layers[layerLevel - 1] + 1, self.layers[layerLevel]) * 2 - 1)
+            #    wml = np.array(wml)
+            #    nw.weightMatrixList = wml
+            #    return
 
-                wml = []
-                for layerLevel in range(1, len(self.layers)):
-                    wml.append(np.random.rand(self.layers[layerLevel - 1] + 1, self.layers[layerLevel]) * 2 - 1)
-                wml = np.array(wml)
-                nw.weightMatrixList = wml
-                return
 
-            # for repNW in reproducedNW:
-            #    if random() > ctm:
-            #    continue
-            # if len(repNW) <= 1:
-            #    print("Shoudln t happen, len: " + str(len(repNW)))
-            #    continue
-            # index = np.random.randint(0, len(repNW))
-
-            # if random() < 0.5:
-            #    repNW[index] = -repNW[index]
-            # else:
-            #    repNW[index] = 2*repNW[index]
 
         return reproducedNW
 
@@ -186,10 +185,13 @@ class Controller:
         wallscore = 1 - 1 / (1 + stat.bumpedIntoWall[0])
         areascore = 2 * stat.areaCovered / stat.maxArea
 
+
+
         dvC = np.mean(stat.dvCount)
 
-        result = areascore - wallscore + dvC
+        #result = areascore - wallscore + dvC
 
+        result =stat.areaCovered - stat.bumpedIntoWall[0]
         #print("Stat: " + str(stat))
         #print("biw: " + str(stat.bumpedIntoWall) + ", area: " + str(stat.areaCovered))
         #print("fit score: " + str(result))
