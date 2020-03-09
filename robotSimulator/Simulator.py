@@ -9,7 +9,7 @@ from pso.robotSimulator.Controller import Controller
 from pso.robotSimulator.Stat import Stat
 
 keepRunning = True
-timeTick = 0.1
+timeTick = 0.2
 tickRate = 13.0
 tick = 0
 
@@ -42,7 +42,7 @@ clock: any
 font_obj: any
 FPS = 40
 
-startingLocation = [150, 300]
+startingLocation = [250, 300]
 visitedGrids = []
 robots: [Robot]
 
@@ -58,7 +58,7 @@ def init(popSize):
     robots = []
     print("init Objects")
 
-    initMap()
+    initMap2()
 
     print("init display")
     # initiates pygame for the simulation of an object
@@ -106,8 +106,27 @@ def initMap():
     obstacleList.append(Obstacle([screenWidth, screenHeight], [screenWidth, 0], thickness))
     obstacleList.append(Obstacle([screenWidth, 0], [0, 0], thickness))
 
-    obstacleList.append(Obstacle([100, 40], [130, 100], thickness))
-    obstacleList.append(Obstacle([340, 450], [300, 240], thickness))
+    obstacleList.append(Obstacle([100, 40], [100, 100], thickness))
+    obstacleList.append(Obstacle([300, 450], [300, 240], thickness))
+
+
+def initMap2():
+    global obstacleList
+
+    thickness = 5
+    obstacleList.append(Obstacle([0, 0], [0, screenHeight], thickness))
+    obstacleList.append(Obstacle([0, screenHeight], [screenWidth, screenHeight], thickness))
+    obstacleList.append(Obstacle([screenWidth, screenHeight], [screenWidth, 0], thickness))
+    obstacleList.append(Obstacle([screenWidth, 0], [0, 0], thickness))
+
+    # obstacleList.append(Obstacle([150, 150], [450, 150], thickness))
+    obstacleList.append(Obstacle([100, 250], [100, 350], thickness))
+    obstacleList.append(Obstacle([400, 150], [400, 300], thickness))
+    obstacleList.append(Obstacle([220, 150], [400, 150], thickness))
+    obstacleList.append(Obstacle([150, 350], [400, 480], thickness))
+    obstacleList.append(Obstacle([100, 350], [150, 350], thickness))
+
+    # obstacleList.append(Obstacle([300, 450], [300, 240], thickness))
 
 
 def update():
@@ -127,10 +146,17 @@ def update():
             handleInput()
 
     for robot in robots:
-        input = np.append(robot.inputSensors, [robot.vRightOld[0] - robot.vLeftOld[0]])
+        inpW = np.array([10, 5, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5])
+        input = np.append(robot.inputSensors * inpW, [robot.vRightOld[0] , robot.vLeftOld[0], 10* (robot.vRightOld[0] - robot.vLeftOld[0]) ])
         # input = np.append(robot.inputSensors, np.array(robot.oldInputs[0]))
         vs = controller.calc(robot.id, input)
-        faktor = 8
+
+        vs = vs / sum(vs)
+        # vs = vs - 0.5
+        # vs = vs * robot.speedMax
+        # robot.setWheelSpeed(vs[0], vs[1])
+
+        faktor = robot.speedMax * 2
         robot.setWheelSpeed(faktor * vs[0], faktor * vs[1])
         move(robot)
 
@@ -235,7 +261,8 @@ def displayRobotSensor(robot: Robot):
         distToObj = distanceToClosestObj(start_location[0] - robot.xCoord,
                                          start_location[1] - robot.yCoord, robot.xCoord,
                                          robot.yCoord) - circleRadius
-        sensorValues.append(distToObj / (150 - circleRadius))
+        # if i == 0 or i == 1 or i == 11:
+        sensorValues.append(1 - distToObj / (150 - circleRadius))
         if robot.id == 1:
             pygame.draw.line(screen, blue, start_location, end_location, 2)
             text_surface_obj = font_obj.render("%.2f" % round(distToObj, 2), True, black)
@@ -300,7 +327,7 @@ def distanceToObj(robotDirX, robotDirY, robotMiddleX, robotMiddleY, wallDirX, wa
         return 100
 
     # s is distance
-    if s < 0:
+    if s < -0.5:
         return 100
     return s
 
@@ -346,7 +373,7 @@ def getEvaluation():
     stats = []
     for robot in robots:
         maxArea = 64 * 48
-        stats.append(Stat(robot.areaCovered, maxArea, robot.wallBumps, robot.releaseFromCollision, robot.cappedOutput))
+        stats.append(Stat(robot.areaCovered, maxArea, robot.wallBumps, robot.releaseFromCollisionCount, robot.cappedOutput))
     return stats
 
 
@@ -356,9 +383,11 @@ def reset():
     global startingLocation
     visitedGrids = []
     print("Reset")
+    randX = np.random.randint(50, 590)
+    randY = np.random.randint(50, 430)
     for robot in robots:
-        robot.xCoord = np.random.randint(50, 590)  # startingLocation[0]
-        robot.yCoord = np.random.randint(50, 430)  # startingLocation[1]
+        robot.xCoord = randX  # startingLocation[0]
+        robot.yCoord = randY  #
         robot.forwardAngle = 1
         visitedGrids.append(np.full((64, 48), False))
 
@@ -379,10 +408,10 @@ def reset():
 # reproduce
 # reproduction -> weights
 
-populationSize = 20
-simulationDuration = 100
+populationSize = 80
+simulationDuration = 50
 init(populationSize)
-controller = Controller([12 + 1, 2], populationSize)
+controller = Controller([12 + 3, 4, 2], populationSize)
 
 roundCount = 1
 while keepRunning:
@@ -397,7 +426,7 @@ while keepRunning:
     controller.train()  # updates the weights
     roundCount += 1
     if roundCount % 10 == 0:
-        simulationDuration += 100
+        simulationDuration += 50
     reset()
 
 pygame.quit()

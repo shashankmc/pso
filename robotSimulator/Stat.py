@@ -2,7 +2,7 @@ class Stat:
     areaCovered: 0
     maxArea: 1
     bumpedIntoWall: []
-    releaseFromWall: bool
+    releaseFromWall=0
     cappedOutput:[]
 
     def __init__(self, ac, ma, biw, rfw, cop):

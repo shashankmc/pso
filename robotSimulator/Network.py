@@ -7,10 +7,17 @@ class Network:
     lastInput= []
     lastOutput = []
 
+    def __init__(self, layers: [], wml):
+        #self.weightMatrixList = []
+        #for layerLevel in range(1, len(layers)):
+        #    self.weightMatrixList.append(np.random.rand(layers[layerLevel - 1] + self.bias, layers[layerLevel]))
+        #self.weightMatrixList = np.array(self.weightMatrixList)
+        self.weightMatrixList = wml
+
     def __init__(self, layers: []):
         self.weightMatrixList = []
         for layerLevel in range(1, len(layers)):
-            self.weightMatrixList.append(np.random.rand(layers[layerLevel - 1] + self.bias, layers[layerLevel]))
+            self.weightMatrixList.append(np.random.rand(layers[layerLevel - 1] + self.bias, layers[layerLevel])*2-1)
         self.weightMatrixList = np.array(self.weightMatrixList)
 
     def sigmoid(self, z):
@@ -20,7 +27,7 @@ class Network:
         res = np.append(np.array(inputValues), self.bias)
         for weights in self.weightMatrixList:
             res = np.matmul(res, weights)
-            #res = self.sigmoid(res)
+            res = self.sigmoid(res)
             res = np.append(res, self.bias)
 
         if ind == 1:

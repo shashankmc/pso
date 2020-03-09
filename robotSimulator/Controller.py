@@ -14,13 +14,15 @@ class Controller:
     highestMeansScore = -10000
     currentMeanScore = -10000
     highestPopulation: [Network]
-
+    layers:[]
 
     def __init__(self, layers: [], populationSize):
         print("init: layers: " + str(layers))
         self.population = []
         self.fitnessScores = []
+        self.layers = layers
         # we need a population of networks
+
         for ps in range(0, populationSize):
             self.population.append(Network(layers))
             self.fitnessScores.append(0)
@@ -61,11 +63,13 @@ class Controller:
         #print("Crossover: " + str(crossover))
 
         # cross mutation because maybe we create spiderman
-        crossMutation = self.mutation(crossover)
+        #crossMutation = self.mutation(crossover)
         #print("Cross Mutation: " + str(crossMutation))
         # update the weights
         for i in range(len(self.population)):
-            self.population[i].setWeightsAsList(crossMutation[i])
+            self.population[i].setWeightsAsList(crossover[i])
+
+        crossMutation = self.mutation(crossover)
         return self.currentMeanScore
 
     def crossover(self, reproducedNW):
@@ -74,9 +78,11 @@ class Controller:
         np.random.shuffle(reproducedNW)
 
         # this needs to be randomized, as it is always the same
-        crossoverType = random()
 
         for i in range(len(reproducedNW)):
+            crossoverType = random()
+            # crossoverType = 0.9
+            #print("Crossover: " + str(crossoverType))
             crossedNWs = []
             # if multiple weights
             mum: np.array = reproducedNW[i]
@@ -107,19 +113,28 @@ class Controller:
         return resultArray
 
     def mutation(self, reproducedNW):
-        ctm = 0.5  # chance to mutate
-        for repNW in reproducedNW:
+        ctm = 0.05  # chance to mutate
+        for nw in self.population:
             if random() > ctm:
-                continue
-            if len(repNW) <= 1:
-                print("Shoudln t happen, len: " + str(len(repNW)))
-                continue
-            index = np.random.randint(0, len(repNW))
 
-            if random() < 0.5:
-                repNW[index] = -repNW[index]
-            else:
-                repNW[index] = 2*repNW[index]
+                wml = []
+                for layerLevel in range(1, len(self.layers)):
+                    wml.append(np.random.rand(self.layers[layerLevel - 1] + 1, self.layers[layerLevel])*2-1)
+                wml = np.array(wml)
+                nw.weightMatrixList = wml
+
+            #for repNW in reproducedNW:
+            #    if random() > ctm:
+            #    continue
+            #if len(repNW) <= 1:
+            #    print("Shoudln t happen, len: " + str(len(repNW)))
+            #    continue
+            #index = np.random.randint(0, len(repNW))
+
+            #if random() < 0.5:
+            #    repNW[index] = -repNW[index]
+            #else:
+            #    repNW[index] = 2*repNW[index]
 
         return reproducedNW
 
@@ -129,35 +144,9 @@ class Controller:
             reproduced.append(self.population[reproductionIndex[i]].getWeightsAsList())
         return reproduced
 
-    def reproduction(self, selectedNW):
-        newpopulation = selectedNW
-        while (newpopulation.count < self.newpopulationSize):
-            # don't have to check for end of array since it will increase with each loop
-            newpopulation.append(newpopulation[i])
-            i += 1
-        return newpopulation
-
-    def crossMutation(self, reproducedNW):
-        ctm = 0.1  # chance to mutate
-        for i in range(reproducedNW.count):
-            if (random() > ctm):
-                continue
-            mutation = random()
-            mw = randomrange(0, reproducedNW.count, 1)  # random mutation partner
-            if (mutation < 0.3):
-                # onepoint mutation
-
-                continue
-            if (mutation < 0.6):
-                # uniform mutation
-                continue
-            else:
-                continue
-                # arithmetic mutation
-        return reproducedNW
 
     def tournamentSelection(self, fitScores: []):
-        k = 10
+        k = 20
         selection = []
         for i in range(len(self.population)):
             # returns k random elements of fitscores
@@ -167,31 +156,14 @@ class Controller:
             selection.append(tSelIndex[0][0])
         return np.array(selection)
 
-    def selection(self, evalNW):
-        groupsize = 3
-        reproduce = 2
-        newpopulation = []
-        for i in range(0, self.populationSize / groupsize + 1, groupsize):
-            group = []
-            for j in range(groupsize):
-                if (i * groupsize + j < self.populationSize):
-                    group.append(self.population[groupsize * i + j])
-            # SelectionSort
-            for j in range(min(reproduce, group.count)):
-                for k in range(j, group.count):
-                    if (group[j] < group[k]):
-                        temp = group[j]
-                        group[j] = group[k]
-                        group[k] = temp
-            for j in range(min(reproduce, group.count)):
-                newpopulation.append(group[j])
-        return newpopulation
-
     def fit(self, stat: Stat):
 
         wallscore = stat.bumpedIntoWall[0]
-        areascore = stat.areaCovered
-        result = areascore - wallscore + np.abs((stat.cappedOutput[0] - stat.cappedOutput[1]))
+        releaseFromWall = stat.releaseFromWall
+        areascore = stat.areaCovered * 20
+
+        steering = np.abs((stat.cappedOutput[0] - stat.cappedOutput[1]))
+        result = areascore - wallscore #+ releaseFromWall # + steering
 
 
         print("Stat: " + str(stat))

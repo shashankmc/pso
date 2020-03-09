@@ -13,14 +13,15 @@ class Robot:
 
     vLeft = 0
     vRight = 0
-    vLeftOld = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    vRightOld = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    vLeftOld = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    vRightOld = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
     length = 0
 
     areaCovered = 0
     wallBumps: []
     releaseFromCollision: bool
+    releaseFromCollisionCount = 0
 
     inputSensors: []
 
@@ -55,13 +56,17 @@ class Robot:
 
     def setWheelSpeed(self, left, right):
         self.vLeft = left
-        if left > self.speedMax:
+        if (-self.speedMax) > left > self.speedMax:
             self.vLeft = self.speedMax
+            if left < 0:
+                self.vLeft *= -1
             self.cappedOutput[0] += 1
 
         self.vRight = right
-        if right > self.speedMax:
+        if (-self.speedMax) > right > self.speedMax:
             self.vRight = self.speedMax
+            if right < 0:
+                self.vRight *= -1
             self.cappedOutput[1] += 1
 
         self.vRightOld.pop(0)
@@ -156,6 +161,7 @@ class Robot:
 
         if collision < 0 and collision2 < 0:
             self.releaseFromCollision = True;
+            self.releaseFromCollisionCount += 1;
 
         self.xCoord = self.nextX
         self.yCoord = self.nextY
