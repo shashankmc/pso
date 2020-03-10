@@ -46,19 +46,17 @@ clock: any
 font_obj: any
 FPS = 40
 
-<<<<<<< HEAD
-startingLocation = [[250, 300], [450, 300], [150, 150], [450, 400], [250, 50]]
-=======
+
+#startingLocation = [[250, 300], [450, 300], [150, 150], [450, 400], [250, 50]]
+
 #startingLocation = [[250, 300], [450, 300] ,[150, 150] ,[450, 400] ,[250, 50]]
 startingLocation = [random.randrange(275, 475), random.randrange(200, 325)]
 #startingLocation = [random.randrange(245, 355), random.randrange(125, 275)]
-
->>>>>>> New maps
 visitedGrids = []
 robots: [Robot]
 
 
-def init(popSize):
+def init(popSize, mapNumber=1):
     global clock
     global circleSurf
     global circleObj
@@ -68,11 +66,19 @@ def init(popSize):
     global robots
     robots = []
     print("init Objects")
+    if mapNumber == 1:
+        initMap()
+    if mapNumber == 2:
+        initMap2()
+    if mapNumber == 3:
+        initMap3()
+    if mapNumber == 4:
+        initMap4()
 
-    initMap()
 
     print("init display")
     # initiates pygame for the simulation of an object
+
     pygame.init()
     # set the screen size as per requirement
     screen = pygame.display.set_mode((screenWidth, screenHeight))
@@ -451,30 +457,54 @@ def reset():
         robot.areaCovered = 0
         visitedGrids.append(np.full((64, 48), False))
 
+def runTrainingSimulation(mapNumber):
+    global controller
+    populationSize = 40
+    simulationDuration = 50
+    init(populationSize, mapNumber)
+    controller = Controller([12 + 3, 4, 2], populationSize)
 
-populationSize = 40
-simulationDuration = 50
-init(populationSize)
-controller = Controller([12 + 3, 4, 2], populationSize)
+    roundCount = 1
+    while keepRunning:
+        print("round number started: " + str(roundCount))
+        for i in range(simulationDuration):  # time for a simulation
+            update()
+        print("done emulating round: " + str(roundCount))
 
-roundCount = 1
-while keepRunning:
-    print("round number started: " + str(roundCount))
-    for i in range(simulationDuration):  # time for a simulation
+        controller.setFitnessScores(getEvaluation())  # get stats for fitness function
+        print("Current mean fitness score: " + str(
+            controller.currentMeanScore[-4:-1]) + ", highest mean fitness score: " + str(
+            controller.highestMeansScore))
+
+        print("Highest currentScore: " + str(controller.highestCurrentScore))
+        print("Hamming Distance: " + str(controller.hammingDistance))
+
+        controller.train()  # updates the weights
+        roundCount += 1
+        if roundCount % 10 == 0:
+            simulationDuration += 50
+        reset()
+    controller.bestCurrentNetwork.savenetwork("bestWeights")
+
+
+def runRobot(mapNumber):
+    global controller
+    global robots
+    simulationDuration = 50
+    init(2, mapNumber)
+    controller = Controller([12 + 3, 4, 2], 2)
+    controller.population[1].loadnetwork("bestWeights")
+    keepRunning = True
+    while keepRunning:
         update()
-    print("done emulating round: " + str(roundCount))
 
-    controller.setFitnessScores(getEvaluation())  # get stats for fitness function
-    print("Current mean fitness score: " + str(
-        controller.currentMeanScore[-4:-1]) + ", highest mean fitness score: " + str(
-        controller.highestMeansScore))
+#Map numbers:
+#1 = rect
+#2 = yannick world
+#3 = trapzoid
+#4 = wierd star
 
-    print("Highest currentScore: " + str(controller.highestCurrentScore))
-    print("Hamming Distance: " + str(controller.hammingDistance))
-    controller.train()  # updates the weights
-    roundCount += 1
-    if roundCount % 10 == 0:
-        simulationDuration += 50
-    reset()
+runTrainingSimulation(4)
+#runRobot(2)
 
 pygame.quit()
