@@ -4,9 +4,13 @@ import math
 from Obstacle import Obstacle
 from Robot import Robot
 import numpy as np
-
-from pso.robotSimulator.Controller import Controller
-from pso.robotSimulator.Stat import Stat
+import random
+from matplotlib import pyplot as plt
+import pandas as pd
+#from pso.robotSimulator.Controller import Controller
+from Controller import Controller
+#from pso.robotSimulator.Stat import Stat
+from Stat import Stat
 
 keepRunning = True
 timeTick = 0.6
@@ -42,7 +46,14 @@ clock: any
 font_obj: any
 FPS = 40
 
+<<<<<<< HEAD
 startingLocation = [[250, 300], [450, 300], [150, 150], [450, 400], [250, 50]]
+=======
+#startingLocation = [[250, 300], [450, 300] ,[150, 150] ,[450, 400] ,[250, 50]]
+startingLocation = [random.randrange(275, 475), random.randrange(200, 325)]
+#startingLocation = [random.randrange(245, 355), random.randrange(125, 275)]
+
+>>>>>>> New maps
 visitedGrids = []
 robots: [Robot]
 
@@ -58,7 +69,7 @@ def init(popSize):
     robots = []
     print("init Objects")
 
-    initMap2()
+    initMap()
 
     print("init display")
     # initiates pygame for the simulation of an object
@@ -89,7 +100,8 @@ def init(popSize):
     clock = pygame.time.Clock()
     visitedGrids = []
     for i in range(popSize):
-        rob = Robot(circleRadius, [startingLocation[0][0], startingLocation[0][1], 0], [0, 0], i)
+        #rob = Robot(circleRadius, [startingLocation[0][0], startingLocation[0][1], 0], [0, 0], i)
+        rob = Robot(circleRadius, (startingLocation[0], startingLocation[1]), [0, 0], i)
         robots.append(rob)
         visitedGrids.append(np.full((64, 48), False))
         displayRobotSensor(rob)
@@ -106,8 +118,14 @@ def initMap():
     obstacleList.append(Obstacle([screenWidth, screenHeight], [screenWidth, 0], thickness))
     obstacleList.append(Obstacle([screenWidth, 0], [0, 0], thickness))
 
-    obstacleList.append(Obstacle([100, 40], [100, 100], thickness))
-    obstacleList.append(Obstacle([300, 450], [300, 240], thickness))
+    #obstacleList.append(Obstacle([100, 40], [100, 100], thickness))
+    #obstacleList.append(Obstacle([300, 450], [300, 240], thickness))
+    obstacleXPos = [250, 500]
+    obstacleYPos = [175, 350]
+    obstacleList.append(Obstacle([obstacleXPos[0], obstacleYPos[0]], [obstacleXPos[1], obstacleYPos[0]], thickness))
+    obstacleList.append(Obstacle([obstacleXPos[1], obstacleYPos[0]], [obstacleXPos[1], obstacleYPos[1]], thickness))
+    obstacleList.append(Obstacle([obstacleXPos[1], obstacleYPos[1]], [obstacleXPos[0], obstacleYPos[1]], thickness))
+    obstacleList.append(Obstacle([obstacleXPos[0], obstacleYPos[1]], [obstacleXPos[0], obstacleYPos[0]], thickness))
 
 
 def initMap2():
@@ -128,6 +146,45 @@ def initMap2():
 
     # obstacleList.append(Obstacle([300, 450], [300, 240], thickness))
 
+
+def initMap3():
+    global obstacleList
+
+    thickness = 5
+    obstacleList.append(Obstacle([0, 0], [0, screenHeight], thickness))
+    obstacleList.append(Obstacle([0, screenHeight], [screenWidth, screenHeight], thickness))
+    obstacleList.append(Obstacle([screenWidth, screenHeight], [screenWidth, 0], thickness))
+    obstacleList.append(Obstacle([screenWidth, 0], [0, 0], thickness))
+
+    #obstacleList.append(Obstacle([100, 40], [100, 100], thickness))
+    #obstacleList.append(Obstacle([300, 450], [300, 240], thickness))
+    obstacleList.append(Obstacle([100, 100],[400, 200], thickness))
+    obstacleList.append(Obstacle([400, 200],[400, 325], thickness))
+    obstacleList.append(Obstacle([400, 325],[100, 400], thickness))
+    obstacleList.append(Obstacle([100, 400],[100, 100], thickness))
+
+
+def initMap4():
+    global obstacleList
+
+    thickness = 5
+    obstacleList.append(Obstacle([0, 0], [0, screenHeight], thickness))
+    obstacleList.append(Obstacle([0, screenHeight], [screenWidth, screenHeight], thickness))
+    obstacleList.append(Obstacle([screenWidth, screenHeight], [screenWidth, 0], thickness))
+    obstacleList.append(Obstacle([screenWidth, 0], [0, 0], thickness))
+
+    #obstacleList.append(Obstacle([100, 40], [100, 100], thickness))
+    #obstacleList.append(Obstacle([300, 450], [300, 240], thickness))
+    obstacleList.append(Obstacle([320, 0],[370, 100], thickness))
+    obstacleList.append(Obstacle([370, 100],[440, 100], thickness))
+    obstacleList.append(Obstacle([440, 100],[370, 200], thickness))
+    obstacleList.append(Obstacle([370, 200],[420, 370], thickness))
+    obstacleList.append(Obstacle([420, 370],[320, 320], thickness))
+    obstacleList.append(Obstacle([320, 320],[220, 370], thickness))
+    obstacleList.append(Obstacle([220, 370],[220, 100], thickness))
+    obstacleList.append(Obstacle([220, 100],[120, 100], thickness))
+    obstacleList.append(Obstacle([120, 100],[320, 0], thickness)) 
+    
 
 def update():
     global clock
@@ -385,8 +442,10 @@ def reset():
     startInd = np.random.randint(0, len(startingLocation))
 
     for robot in robots:
-        robot.xCoord = startingLocation[startInd][0]
-        robot.yCoord = startingLocation[startInd][1]
+        #robot.xCoord = startingLocation[startInd][0]
+        robot.xCoord = startingLocation[0]
+        #robot.yCoord = startingLocation[startInd][1]
+        robot.yCoord = startingLocation[1]
         robot.forwardAngle = 1
         robot.wallBumps[0] = 0
         robot.areaCovered = 0
@@ -412,7 +471,6 @@ while keepRunning:
 
     print("Highest currentScore: " + str(controller.highestCurrentScore))
     print("Hamming Distance: " + str(controller.hammingDistance))
-
     controller.train()  # updates the weights
     roundCount += 1
     if roundCount % 10 == 0:
