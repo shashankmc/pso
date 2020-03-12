@@ -13,6 +13,7 @@ tick = 0
 
 circle: any
 obstacleList = []
+beaconList = []
 # setting screen width and height
 screenWidth = 640
 screenHeight = 480
@@ -36,6 +37,7 @@ screen: any
 circleSurf: any
 obstacleList: any
 obstacleSurf: any
+beaconList: any
 clock: any
 font_obj: any
 FPS = 40
@@ -92,6 +94,7 @@ def init():
 
 def initMap():
     global obstacleList
+    global beaconList
 
     thickness = 5
     obstacleList.append(Obstacle([0, 0], [0, screenHeight], thickness))
@@ -102,9 +105,17 @@ def initMap():
     obstacleList.append(Obstacle([100, 40], [100, 100], thickness))
     obstacleList.append(Obstacle([300, 450], [300, 240], thickness))
 
+    beaconList.append([0,0])
+    beaconList.append([0,screenHeight])
+    beaconList.append([screenWidth,0])
+    beaconList.append([screenWidth,screenHeight])
+
+
+
 
 def initMap2():
     global obstacleList
+    global beaconList
 
     thickness = 5
     obstacleList.append(Obstacle([0, 0], [0, screenHeight], thickness))
@@ -120,6 +131,11 @@ def initMap2():
     obstacleList.append(Obstacle([100, 350], [150, 350], thickness))
 
     # obstacleList.append(Obstacle([300, 450], [300, 240], thickness))
+    beaconList.append([0,0])
+    beaconList.append([0,screenHeight])
+    beaconList.append([screenWidth,0])
+    beaconList.append([screenWidth,screenHeight])
+    beaconList.append([100, 350])
 
 
 def update():
@@ -204,13 +220,16 @@ def move(robot: Robot):
     drawGrid()
     addObstacle()
     screen.blit(circleSurf, (robot.xCoord - circleRadius, robot.yCoord - circleRadius))
+    startLoc = [robot.xCoord, robot.yCoord]
+    endLoc = [robot.xCoord + np.cos(robot.forwardAngle) * circleRadius,
+        robot.yCoord + np.sin(robot.forwardAngle) * circleRadius]
+    pygame.draw.line(screen, black, startLoc, endLoc, 2)
 
-    updateGrid(robot.xCoord, robot.yCoord, robot)
+    #updateGrid(robot.xCoord, robot.yCoord, robot)
 
     #displayRobotSensor(robot)  # didn t want to try to  mix up the sequence
-    if robot.id == 1:
-        displayVelocityOnScreen(1)
-        pygame.display.update()
+    displayVelocityOnScreen(1)
+    pygame.display.update()
 
 
 def updateGrid(xCoord, yCoord, robot):
@@ -224,8 +243,7 @@ def updateGrid(xCoord, yCoord, robot):
     numDust = np.sum(visitedGrid)
     dustLoc = np.nonzero(visitedGrid)
     for i in range(numDust):
-        if robot.id == 1:  # we draw only one robot
-            pygame.draw.circle(screen, red, (dustLoc[0][i] * 10, dustLoc[1][i] * 10), 13)
+        pygame.draw.circle(screen, red, (dustLoc[0][i] * 10, dustLoc[1][i] * 10), 13)
     robot.areaCovered = numDust
 
 
@@ -324,6 +342,8 @@ def addObstacle():
                                        (obstacle.startLoc[0], obstacle.startLoc[1]),
                                        (obstacle.endLoc[0], obstacle.endLoc[1]), obstacle.thickness)
         # screen.blit(screen, obstacleObj)
+    for beacon in beaconList:
+        beaconObj = pygame.draw.circle(screen, blue, beacon, 15)
 
 
 def drawGrid():
