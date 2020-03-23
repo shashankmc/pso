@@ -1,8 +1,13 @@
+import math
+
 import numpy as np
 
 from pso.localization.Beacon import Beacon
 from pso.localization.Robot import Robot
 
+def nCr(n,k):
+    f = math.factorial
+    return f(n) / (f(k) * f(n-k))
 
 def poseCalculationReal(beaconList: [Beacon], robot: Robot, miuT):
     # in range?
@@ -13,7 +18,10 @@ def poseCalculationReal(beaconList: [Beacon], robot: Robot, miuT):
             counter += 1
 
     if counter > 2:
-        return np.array([robot.xCoord, robot.yCoord, robot.forwardAngle]), counter
+        possibleTriangulations = int(nCr(counter, 3))
+        noise = [np.mean(np.random.normal(0, 1, possibleTriangulations)), np.mean(np.random.normal(0, 1, possibleTriangulations)), np.mean(np.random.normal(0, 0.1, possibleTriangulations))]
+        result = np.array([robot.xCoord, robot.yCoord, robot.forwardAngle]) + noise
+        return result, counter
     else:
         return np.array([0,0,0]), counter
         #return miuT, counter
@@ -35,14 +43,14 @@ def poseTracking(deltaTime, uT, zT, miuTminusOne, epsilonTminusOne):
     # Init with small values
     sigmaRx2 = 1
     sigmaRy2 = 1
-    sigmaRTheta2 = 1
+    sigmaRTheta2 = 0.1
     R = np.array([[sigmaRx2, 0, 0], [0, sigmaRy2, 0], [0, 0, sigmaRTheta2]])
 
     # Q = Covriance, noise of sensor model delta?!
     # init with small values
     sigmaQx2 = 1
     sigmaQy2 = 1
-    sigmaQTheta2 = 1
+    sigmaQTheta2 = 0.1
     Q = np.array([[sigmaQx2, 0, 0], [0, sigmaQy2, 0], [0, 0, sigmaQTheta2]])
 
     #print("KalmanFilter")

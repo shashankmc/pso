@@ -301,22 +301,22 @@ def doLocalization(robot: Robot):
     global beaconList
     global epsilonT
     global miuT
+    global tick
 
     uT = np.array([robot.speed, robot.angle])
 
     # mock, not sure how this is supposed to behave when less than 3 beacons
-    zt, inrangeBeacon = poseCalculationReal(beaconList, robot, miuT)
-    zt = zt + [np.random.normal(0, 1), np.random.normal(0, 1), np.random.normal(0, 0.1)]
-
-    miuTP1, epsilonTP1 = poseTracking(timeTick, uT, zt, miuT, epsilonT)
-    epsilonT = epsilonTP1
-    miuT = miuTP1
-    if tick % 100 == 0:
-        print("Beacons in range: " + str(inrangeBeacon))
-        print("Estimated epsilonTP1: \n" + str(epsilonTP1))
-        print("Estimated muiT+1: \n" + str(miuTP1))
-        print("Real muiT+1: \n" + str([robot.xCoord, robot.yCoord, robot.forwardAngle]))
-
+    zt, inRangeBeacon = poseCalculationReal(beaconList, robot, miuT)
+    if(inRangeBeacon > 2):
+        miuTP1, epsilonTP1 = poseTracking(timeTick, uT, zt, miuT, epsilonT)
+        epsilonT = epsilonTP1
+        miuT = miuTP1
+        if tick % 100 == 0:
+            print("Beacons in range: " + str(inRangeBeacon))
+            print("Estimated epsilonTP1: \n" + str(epsilonTP1))
+            print("Estimated muiT+1: \n" + str(miuTP1))
+            print("Real muiT+1: \n" + str([robot.xCoord, robot.yCoord, robot.forwardAngle]))
+    else:
 
 
 init()
