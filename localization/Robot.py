@@ -62,10 +62,10 @@ class Robot:
         self.speed -= 1
 
     def angleInc(self):
-        self.angle += .02
+        self.angle += .04
     
     def angleDec(self):
-        self.angle -= .02
+        self.angle -= .04
 
     def stop(self):
         self.speed = 0
@@ -148,7 +148,11 @@ class Robot:
                 self.xCoord + self.length >= x1 and self.xCoord - self.length <= x2 and self.yCoord + self.length >= y1 and self.yCoord - self.length <= y2)
 
     def updateLocation(self, timeStep, obstacleList):
+
         self.nextX = self.xCoord + self.speed * np.cos(self.forwardAngle) * timeStep
         self.nextY = self.yCoord + self.speed * np.sin(self.forwardAngle) * timeStep
-        self.forwardAngle += self.angle 
+        self.forwardAngle += self.angle * timeStep
+        self.forwardAngle = self.forwardAngle % (np.pi*2)
+        #print("forwardAngle: " + str(self.forwardAngle))
+
         self.collisionstuff(obstacleList)

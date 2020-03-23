@@ -3,8 +3,11 @@ import pygame
 import math
 from Obstacle import Obstacle
 from Robot import Robot
+from kalmantest import poseTracking
 import numpy as np
 
+from pso.localization.Beacon import Beacon
+from pso.localization.kalmantest import poseCalculationReal
 
 keepRunning = True
 timeTick = 0.6
@@ -13,7 +16,7 @@ tick = 0
 
 circle: any
 obstacleList = []
-beaconList = []
+beaconList: [Beacon] = []
 # setting screen width and height
 screenWidth = 640
 screenHeight = 480
@@ -37,7 +40,6 @@ screen: any
 circleSurf: any
 obstacleList: any
 obstacleSurf: any
-beaconList: any
 clock: any
 font_obj: any
 FPS = 40
@@ -45,6 +47,9 @@ FPS = 40
 startingLocation = [[250, 300], [450, 300], [150, 150], [450, 400], [250, 50]]
 visitedGrids = []
 robots: [Robot]
+
+epsilonT: np.array
+miuT: np.array
 
 
 def init():
@@ -55,8 +60,18 @@ def init():
     global font_obj
     global visitedGrid
     global robot
+    global epsilonT
+    global miuT
+
     robot = Robot(circleRadius, [startingLocation[0][0], startingLocation[0][1], 0], [0, 0], 0)
     print("init Objects")
+
+    sigmax2 = 1
+    sigmay2 = 1
+    sigmaTheta2 = 1
+    epsilonT = np.array([[sigmax2, 0, 0], [0, sigmay2, 0], [0, 0, sigmaTheta2]])
+
+    miuT = np.array([robot.xCoord, robot.yCoord, robot.angle])
 
     initMap2()
 
@@ -105,12 +120,10 @@ def initMap():
     obstacleList.append(Obstacle([100, 40], [100, 100], thickness))
     obstacleList.append(Obstacle([300, 450], [300, 240], thickness))
 
-    beaconList.append([0,0])
-    beaconList.append([0,screenHeight])
-    beaconList.append([screenWidth,0])
-    beaconList.append([screenWidth,screenHeight])
-
-
+    beaconList.append(Beacon(0, 0, 0))
+    beaconList.append(Beacon(0, screenHeight, 1))
+    beaconList.append(Beacon(screenWidth, 0, 2))
+    beaconList.append(Beacon(screenWidth, screenHeight, 3))
 
 
 def initMap2():
@@ -131,11 +144,16 @@ def initMap2():
     obstacleList.append(Obstacle([100, 350], [150, 350], thickness))
 
     # obstacleList.append(Obstacle([300, 450], [300, 240], thickness))
-    beaconList.append([0,0])
-    beaconList.append([0,screenHeight])
-    beaconList.append([screenWidth,0])
-    beaconList.append([screenWidth,screenHeight])
-    beaconList.append([100, 350])
+
+    beaconList.append(Beacon(0, 0, 0))
+    beaconList.append(Beacon(0, screenHeight, 1))
+    beaconList.append(Beacon(screenWidth, 0, 2))
+    beaconList.append(Beacon(screenWidth, screenHeight, 3))
+    beaconList.append(Beacon(100, 350, 4))
+    beaconList.append(Beacon(400, 300, 4))
+    beaconList.append(Beacon(150, 350, 4))
+    beaconList.append(Beacon(100, 250, 4))
+    beaconList.append(Beacon(400, 150, 4))
 
 
 def update():
@@ -157,14 +175,6 @@ def update():
     move(robot)
     tick += 1
 
-"""     for robot in robots:
-        inputs = np.append(robot.inputSensors,
-                          [robot.vRightOld[0], robot.vLeftOld[0], (robot.vRightOld[0] - robot.vLeftOld[0])])
-        vs = controller.calc(robot.id, inputs)
-        vs = vs * robot.speedMax / sum(vs)
-
-        robot.setWheelSpeed(vs[0], vs[1])
-        move(robot) """
 
 def handleInput():
     global keepRunning
@@ -179,8 +189,8 @@ def handleInput():
     if keys[pygame.K_s]:
         # print("negative increment of left wheel motor speed")
         robot.speedDec()
-        #print("SAVING")
-        #controller.savePopulation("networkWeights/robotSave")
+        # print("SAVING")
+        # controller.savePopulation("networkWeights/robotSave")
         return
 
     if keys[pygame.K_d]:
@@ -194,15 +204,15 @@ def handleInput():
     if keys[pygame.K_o]:
         # print("positive increment of right wheel motor speed")
         # robot.xCoord += changePos
-        #robots[1].rightWheelInc()
+        # robots[1].rightWheelInc()
         return
     if keys[pygame.K_l]:
         # print("negative increment of right wheel motor speed")
         # robot.xCoord -= changePos
         # robots[1].rightWheelDec()
         print("Loading")
-        #controller.loadPopulation("networkWeights/robotSave")
-        #reset()
+        # controller.loadPopulation("networkWeights/robotSave")
+        # reset()
         return
     if keys[pygame.K_x]:
         # print("both motor speeds are zero")
@@ -222,12 +232,14 @@ def move(robot: Robot):
     screen.blit(circleSurf, (robot.xCoord - circleRadius, robot.yCoord - circleRadius))
     startLoc = [robot.xCoord, robot.yCoord]
     endLoc = [robot.xCoord + np.cos(robot.forwardAngle) * circleRadius,
-        robot.yCoord + np.sin(robot.forwardAngle) * circleRadius]
+              robot.yCoord + np.sin(robot.forwardAngle) * circleRadius]
     pygame.draw.line(screen, black, startLoc, endLoc, 2)
 
-    #updateGrid(robot.xCoord, robot.yCoord, robot)
+    doLocalization(robot)
 
-    #displayRobotSensor(robot)  # didn t want to try to  mix up the sequence
+    # updateGrid(robot.xCoord, robot.yCoord, robot)
+
+    # displayRobotSensor(robot)  # didn t want to try to  mix up the sequence
     displayVelocityOnScreen(1)
     pygame.display.update()
 
@@ -247,95 +259,8 @@ def updateGrid(xCoord, yCoord, robot):
     robot.areaCovered = numDust
 
 
-""" def displayRobotSensor(robot: Robot):
-    global circelSurf
-    global robots
-
-    addAngle = 0
-    sensorValues = []
-    for i in range(0, 12):
-        start_location = [robot.xCoord + np.cos(robot.forwardAngle + addAngle) * circleRadius,
-                          robot.yCoord + np.sin(robot.forwardAngle + addAngle) * circleRadius]
-        text_location = [robot.xCoord + np.cos(robot.forwardAngle + addAngle) * 4 * circleRadius,
-                         robot.yCoord + np.sin(robot.forwardAngle + addAngle) * 4 * circleRadius]
-        end_location = [robot.xCoord + np.cos(robot.forwardAngle + addAngle) * 3 * circleRadius,
-                        robot.yCoord + np.sin(robot.forwardAngle + addAngle) * 3 * circleRadius]
-
-        distToObj = distanceToClosestObj(start_location[0] - robot.xCoord,
-                                         start_location[1] - robot.yCoord, robot.xCoord,
-                                         robot.yCoord) - circleRadius
-        # if i == 0 or i == 1 or i == 11:
-        sensorValues.append(1 - distToObj / (150 - circleRadius))
-        if robot.id == 1:
-            pygame.draw.line(screen, blue, start_location, end_location, 2)
-            text_surface_obj = font_obj.render("%.2f" % round(distToObj, 2), True, black)
-            text_rect_obj = text_surface_obj.get_rect()
-            text_rect_obj.center = (text_location)
-            screen.blit(text_surface_obj, text_rect_obj)
-        addAngle += np.pi / 6
-    robot.inputSensors = sensorValues """
-
-
-""" def distanceToClosestObj(robotSensorDirX, robotSensorDirY, robotMiddleX, robotMiddleY):
-    global obstacleList
-    closestDist = 100000
-
-    for obstacle in obstacleList:
-        # gets distance to obstacle
-        dist = distanceToObj(robotSensorDirX, robotSensorDirY, robotMiddleX, robotMiddleY, obstacle.directionvector[0],
-                             obstacle.directionvector[1], obstacle.startLoc[0], obstacle.startLoc[1],
-                             )
-        dist = dist * circleRadius
-        # print("DISTANCE: " + str(dist))
-        # only needs closest distance
-        if dist < closestDist:
-            # print("DISTANCE UPDATE: " + str(dist))
-            closestDist = dist
-    if (closestDist > 150):
-        return 150
-    return closestDist """
-
-
-""" def distanceToObj(robotDirX, robotDirY, robotMiddleX, robotMiddleY, wallDirX, wallDirY, wallStartX, wallStartY):
-    if wallDirX == 0:
-        s = (wallStartX - robotMiddleX) / robotDirX
-        g = (s * robotDirY + robotMiddleY - wallStartY) / wallDirY
-
-    elif wallDirY == 0:
-        s = (wallStartY - robotMiddleY) / robotDirY
-        g = (s * robotDirX + robotMiddleX - wallStartX) / wallDirX
-
-    elif robotDirX == 0:
-        g = (robotMiddleX - wallStartX) / wallDirX
-        s = (g * wallDirY + wallStartY - robotMiddleY) / robotDirY
-
-    elif robotDirY == 0:
-        g = (robotMiddleY - wallStartY) / wallDirY
-        s = (g * wallDirX + wallStartX - robotMiddleX) / robotDirX 
-
-
-    # if true than parallel
-    elif wallDirX * (robotDirY / wallDirY) == robotDirX:
-        return 100
-    else:
-        g = (((wallStartY - robotMiddleY) / robotDirY) * (robotDirX / wallDirX) + (
-                (robotMiddleX - wallStartX) / wallDirX)) / (1 - ((robotDirX * wallDirY) / (wallDirX * robotDirY)))
-        # s = ((wallStartY - robotMiddleY) / robotDirY) / (1 - ((robotDirX + robotMiddleX - wallStartX) / wallDirX))
-        # s = x of sensor line
-        s = (g * wallDirY + wallStartY - robotMiddleY) / robotDirY
-        # g = (s * robotDirX + robotMiddleX - wallStartX) / wallDirX
-        # print("s: = " + str(s) + ", g: " + str(g))
-    # print("S: " + str(s))
-    if g < 0 or g > 1:
-        return 100
-
-    # s is distance
-    if s < -0.5:
-        return 100
-    return s """
-
-
 def addObstacle():
+    global beaconList
     # screen.fill(white)
     for obstacle in obstacleList:
         obstacleObj = pygame.draw.line(screen, black,
@@ -343,7 +268,7 @@ def addObstacle():
                                        (obstacle.endLoc[0], obstacle.endLoc[1]), obstacle.thickness)
         # screen.blit(screen, obstacleObj)
     for beacon in beaconList:
-        beaconObj = pygame.draw.circle(screen, blue, beacon, 15)
+        beaconObj = pygame.draw.circle(screen, blue, [beacon.x, beacon.y], 15)
 
 
 def drawGrid():
@@ -372,21 +297,26 @@ def displayVelocityOnScreen(ind):
     screen.blit(textRight, (550, 25))
 
 
-""" def reset():
-    global robots
-    global visitedGrids
-    global startingLocation
-    visitedGrids = []
-    print("Reset")
-    startInd = np.random.randint(0, len(startingLocation))
+def doLocalization(robot: Robot):
+    global beaconList
+    global epsilonT
+    global miuT
 
-    for robot in robots:
-        robot.xCoord = startingLocation[startInd][0]
-        robot.yCoord = startingLocation[startInd][1]
-        robot.forwardAngle = 1
-        robot.wallBumps[0] = 0
-        robot.areaCovered = 0
-        visitedGrids.append(np.full((64, 48), False)) """
+    uT = np.array([robot.speed, robot.angle])
+
+    # mock, not sure how this is supposed to behave when less than 3 beacons
+    zt, inrangeBeacon = poseCalculationReal(beaconList, robot, miuT)
+    zt = zt + [np.random.normal(0, 1), np.random.normal(0, 1), np.random.normal(0, 0.1)]
+
+    miuTP1, epsilonTP1 = poseTracking(timeTick, uT, zt, miuT, epsilonT)
+    epsilonT = epsilonTP1
+    miuT = miuTP1
+    if tick % 100 == 0:
+        print("Beacons in range: " + str(inrangeBeacon))
+        print("Estimated epsilonTP1: \n" + str(epsilonTP1))
+        print("Estimated muiT+1: \n" + str(miuTP1))
+        print("Real muiT+1: \n" + str([robot.xCoord, robot.yCoord, robot.forwardAngle]))
+
 
 
 init()
