@@ -304,10 +304,12 @@ def doLocalization(robot: Robot):
     global tick
 
     uT = np.array([robot.speed, robot.angle])
+    # addend motion modle error
+    uT = uT + np.array([np.random.normal(0, 1), np.random.normal(0, 0.1)])
 
     # mock, not sure how this is supposed to behave when less than 3 beacons
     zt, inRangeBeacon = poseCalculationReal(beaconList, robot, miuT)
-    if(inRangeBeacon > 2):
+    if inRangeBeacon > 2:
         miuTP1, epsilonTP1 = poseTracking(timeTick, uT, zt, miuT, epsilonT)
         epsilonT = epsilonTP1
         miuT = miuTP1
@@ -317,6 +319,7 @@ def doLocalization(robot: Robot):
             print("Estimated muiT+1: \n" + str(miuTP1))
             print("Real muiT+1: \n" + str([robot.xCoord, robot.yCoord, robot.forwardAngle]))
     else:
+        epsilonT = epsilonT * 1.01
 
 
 init()

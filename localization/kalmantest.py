@@ -19,7 +19,7 @@ def poseCalculationReal(beaconList: [Beacon], robot: Robot, miuT):
 
     if counter > 2:
         possibleTriangulations = int(nCr(counter, 3))
-        noise = [np.mean(np.random.normal(0, 1, possibleTriangulations)), np.mean(np.random.normal(0, 1, possibleTriangulations)), np.mean(np.random.normal(0, 0.1, possibleTriangulations))]
+        noise = [np.mean(np.random.normal(0, 3, possibleTriangulations)), np.mean(np.random.normal(0, 3, possibleTriangulations)), np.mean(np.random.normal(0, 0.1, possibleTriangulations))]
         result = np.array([robot.xCoord, robot.yCoord, robot.forwardAngle]) + noise
         return result, counter
     else:
