@@ -6,8 +6,10 @@ from Robot import Robot
 from kalmantest import poseTracking
 import numpy as np
 
-from pso.localization.Beacon import Beacon
-from pso.localization.kalmantest import poseCalculationReal
+#from pso.localization.Beacon import Beacon
+from Beacon import Beacon
+#from pso.localization.kalmantest import poseCalculationReal
+from kalmantest import poseCalculationReal
 
 keepRunning = True
 timeTick = 0.6
@@ -26,6 +28,7 @@ changePos = 25
 # setting grid margin, and blocks size
 marginSize = 30
 blockSize = 25
+ellipseSize = (0, 0, 100, 50)
 
 # define colors
 white = (255, 255, 255)
@@ -46,6 +49,7 @@ FPS = 40
 
 startingLocation = [[250, 300], [450, 300], [150, 150], [450, 400], [250, 50]]
 visitedGrids = []
+ellipseHist = []
 robots: [Robot]
 
 epsilonT: np.array
@@ -68,7 +72,7 @@ def init():
 
     sigmax2 = 1
     sigmay2 = 1
-    sigmaTheta2 = 1
+    sigmaTheta2 = 0.1
     epsilonT = np.array([[sigmax2, 0, 0], [0, sigmay2, 0], [0, 0, sigmaTheta2]])
 
     miuT = np.array([robot.xCoord, robot.yCoord, robot.angle])
@@ -171,9 +175,10 @@ def update():
     for event in pygame.event.get():
         if event.type == pygame.KEYDOWN:
             handleInput()
-
-    move(robot)
+    
     tick += 1
+    move(robot, tick)
+    
 
 
 def handleInput():
@@ -219,26 +224,25 @@ def handleInput():
         robot.stop()
 
 
-def move(robot: Robot):
+def move(robot: Robot, tick):
     global circleSurf
     global circleObj
     global timeTick
-
+    
+    
     # background.clamp_ip(screen)
     robot.updateLocation(timeTick, obstacleList)
     screen.fill(white)
     drawGrid()
+    doLocalization(robot)
+    drawEllipse(tick)
+    updateGrid(robot.xCoord, robot.yCoord, robot)
     addObstacle()
     screen.blit(circleSurf, (robot.xCoord - circleRadius, robot.yCoord - circleRadius))
     startLoc = [robot.xCoord, robot.yCoord]
     endLoc = [robot.xCoord + np.cos(robot.forwardAngle) * circleRadius,
               robot.yCoord + np.sin(robot.forwardAngle) * circleRadius]
     pygame.draw.line(screen, black, startLoc, endLoc, 2)
-
-    doLocalization(robot)
-
-    # updateGrid(robot.xCoord, robot.yCoord, robot)
-
     # displayRobotSensor(robot)  # didn t want to try to  mix up the sequence
     displayVelocityOnScreen(1)
     pygame.display.update()
@@ -247,15 +251,24 @@ def move(robot: Robot):
 def updateGrid(xCoord, yCoord, robot):
     global circleSurf
     global visitedGrid
+    global visitedGrids
+    
+    
     xind = int(xCoord / 10)
     yind = int(yCoord / 10)
+    visitedGrids.append([xind, yind])
+    #print(xind, yind)
     if 0 <= xind < 64 and 0 <= yind < 48:
         visitedGrid[xind][yind] = True
 
     numDust = np.sum(visitedGrid)
     dustLoc = np.nonzero(visitedGrid)
-    for i in range(numDust):
-        pygame.draw.circle(screen, red, (dustLoc[0][i] * 10, dustLoc[1][i] * 10), 13)
+    #print(len(visitedGrids))
+    for i in range(1, len(visitedGrids)):
+    #for i in range(numDust):
+        #if robot.id == 1:
+        #pygame.draw.circle(screen, red, (dustLoc[0][i] * 10, dustLoc[1][i] * 10), 13)
+        pygame.draw.line(screen, black, (visitedGrids[i-1][0] * 10, visitedGrids[i-1][1] * 10), (visitedGrids[i][0] * 10, visitedGrids[i][1] * 10), 1)
     robot.areaCovered = numDust
 
 
@@ -302,7 +315,9 @@ def doLocalization(robot: Robot):
     global epsilonT
     global miuT
     global tick
-
+    global epsilonTP1
+    global miuTP1
+    
     uT = np.array([robot.speed, robot.angle])
     # addend motion modle error
     uT = uT + np.array([np.random.normal(0, 1), np.random.normal(0, 0.1)])
@@ -317,9 +332,25 @@ def doLocalization(robot: Robot):
         print("Beacons in range: " + str(inRangeBeacon))
         print("Estimated epsilonTP1: \n" + str(epsilonTP1))
         print("Estimated muiT+1: \n" + str(miuTP1))
-        print("Real muiT+1: \n" + str([robot.xCoord, robot.yCoord, robot.forwardAngle]))
+        print("Real muiT+1: \n" + str([robot.xCoord, robot.yCoord, robot.forwardAngle]))    
 
 
+def drawEllipse(tick):
+    global epsilonTP1
+    global ellipseHist
+    global miuT
+    global miuTP1
+    
+    predictLine = []
+    predictLine.append([miuTP1[0], miuTP1[1]])
+    if tick % 100 == 0:
+        ellipseSize = (miuTP1[0], miuTP1[1], epsilonTP1[0,0], epsilonTP1[1,1])
+        ellipseHist.append(ellipseSize)
+    for i in range(1, len(ellipseHist)):
+        pygame.draw.ellipse(screen, green, ellipseHist[i-1], 1)
+        #if i != 1:
+        #    pygame.draw.line(screen, red, predictLine[i-1], predictLine[i], 1)
+    
 
 init()
 

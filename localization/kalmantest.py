@@ -2,8 +2,10 @@ import math
 
 import numpy as np
 
-from pso.localization.Beacon import Beacon
-from pso.localization.Robot import Robot
+#from pso.localization.Beacon import Beacon
+from Beacon import Beacon
+#from pso.localization.Robot import Robot
+from Robot import Robot
 
 def nCr(n,k):
     f = math.factorial
@@ -41,8 +43,8 @@ def poseTracking(deltaTime, uT, zT, miuTminusOne, epsilonTminusOne):
 
     # R = Covariance, noise of motion model epsilon
     # Init with small values
-    sigmaRx2 = 1
-    sigmaRy2 = 1
+    sigmaRx2 = 0.4
+    sigmaRy2 = 0.4
     sigmaRTheta2 = 0.1
     R = np.array([[sigmaRx2, 0, 0], [0, sigmaRy2, 0], [0, 0, sigmaRTheta2]])
 
