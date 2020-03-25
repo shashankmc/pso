@@ -50,6 +50,7 @@ FPS = 40
 startingLocation = [[250, 300], [450, 300], [150, 150], [450, 400], [250, 50]]
 visitedGrids = []
 ellipseHist = []
+predictLine = []
 robots: [Robot]
 
 epsilonT: np.array
@@ -153,6 +154,7 @@ def initMap2():
     beaconList.append(Beacon(0, screenHeight, 1))
     beaconList.append(Beacon(screenWidth, 0, 2))
     beaconList.append(Beacon(screenWidth, screenHeight, 3))
+    beaconList.append(Beacon(220, 150, 4))
     beaconList.append(Beacon(100, 350, 4))
     beaconList.append(Beacon(400, 300, 4))
     beaconList.append(Beacon(150, 350, 4))
@@ -287,10 +289,10 @@ def drawGrid():
     # draw the grid
     for i in range(0, screenWidth, blockSize):
         i = i + 10
-        pygame.draw.line(screen, grey, (i, 0), (i, screenHeight), 1)
+        pygame.draw.line(screen, grey, (i, 0), (i, screenHeight), 2)
     for j in range(0, screenHeight, blockSize):
         j = j + 10
-        pygame.draw.line(screen, grey, (0, j), (screenWidth, j), 1)
+        pygame.draw.line(screen, grey, (0, j), (screenWidth, j), 2)
 
 
 def displayVelocityOnScreen(ind):
@@ -338,9 +340,7 @@ def drawEllipse(tick, robot: Robot):
     global ellipseHist
     global miuT
 
-
-    predictLine = []
-    predictLine.append([miuTP1[0], miuTP1[1]])
+    predictLine.append([miuT[0], miuT[1]])
     #if tick % 100 == 0:
     ellipseSize = [miuT[0] - 0.5 * epsilonTP1[0, 0], miuT[1] - 0.5 * epsilonTP1[1, 1], epsilonTP1[0, 0], epsilonTP1[1, 1]]
     # ellipseSize = [miuTP1[0] - 25, miuTP1[0] - 25, 50, 50]
@@ -349,13 +349,15 @@ def drawEllipse(tick, robot: Robot):
     else:
         ellipseHist = []
 
-
     for i in range(1, len(ellipseHist)):
         #print("drawing elli: " + str(ellipseHist[i - 1]))
         #print("drawing robot xchoord: " + str(robot.xCoord) + ", y: " + str(robot.yCoord))
         pygame.draw.ellipse(screen, green, ellipseHist[i - 1], 1)
-        # if i != 1:
-        #    pygame.draw.line(screen, red, predictLine[i-1], predictLine[i], 1)
+        #pygame.gfxdraw.ellipse(screen, ellipseHist[i - 1], epsilonTP1[0,1], epsilonTP1[1,1], Color("Pink"))
+        
+    if (len(predictLine) > 1):
+        for i in range(1, len(predictLine)):
+            pygame.draw.line(screen, red, predictLine[i-1], predictLine[i], 1)
     #print("#######################")
 
 
