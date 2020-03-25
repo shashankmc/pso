@@ -282,6 +282,8 @@ def addObstacle():
         # screen.blit(screen, obstacleObj)
     for beacon in beaconList:
         beaconObj = pygame.draw.circle(screen, blue, [beacon.x, beacon.y], 15)
+        if (np.sqrt((beacon.x - robot.xCoord) ** 2 + (beacon.y - robot.yCoord) ** 2) < 150):
+            pygame.draw.line(screen, blue, (beacon.x, beacon.y), (robot.xCoord, robot.yCoord), 1)
 
 
 def drawGrid():
