@@ -6,9 +6,9 @@ from Robot import Robot
 from kalmantest import poseTracking
 import numpy as np
 
-#from pso.localization.Beacon import Beacon
+# from pso.localization.Beacon import Beacon
 from Beacon import Beacon
-#from pso.localization.kalmantest import poseCalculationReal
+# from pso.localization.kalmantest import poseCalculationReal
 from kalmantest import poseCalculationReal
 
 keepRunning = True
@@ -175,10 +175,9 @@ def update():
     for event in pygame.event.get():
         if event.type == pygame.KEYDOWN:
             handleInput()
-    
+
     tick += 1
     move(robot, tick)
-    
 
 
 def handleInput():
@@ -228,14 +227,13 @@ def move(robot: Robot, tick):
     global circleSurf
     global circleObj
     global timeTick
-    
-    
+
     # background.clamp_ip(screen)
     robot.updateLocation(timeTick, obstacleList)
     screen.fill(white)
     drawGrid()
     doLocalization(robot)
-    drawEllipse(tick)
+    drawEllipse(tick, robot)
     updateGrid(robot.xCoord, robot.yCoord, robot)
     addObstacle()
     screen.blit(circleSurf, (robot.xCoord - circleRadius, robot.yCoord - circleRadius))
@@ -252,23 +250,23 @@ def updateGrid(xCoord, yCoord, robot):
     global circleSurf
     global visitedGrid
     global visitedGrids
-    
-    
+
     xind = int(xCoord / 10)
     yind = int(yCoord / 10)
     visitedGrids.append([xind, yind])
-    #print(xind, yind)
+    # print(xind, yind)
     if 0 <= xind < 64 and 0 <= yind < 48:
         visitedGrid[xind][yind] = True
 
     numDust = np.sum(visitedGrid)
     dustLoc = np.nonzero(visitedGrid)
-    #print(len(visitedGrids))
+    # print(len(visitedGrids))
     for i in range(1, len(visitedGrids)):
-    #for i in range(numDust):
-        #if robot.id == 1:
-        #pygame.draw.circle(screen, red, (dustLoc[0][i] * 10, dustLoc[1][i] * 10), 13)
-        pygame.draw.line(screen, black, (visitedGrids[i-1][0] * 10, visitedGrids[i-1][1] * 10), (visitedGrids[i][0] * 10, visitedGrids[i][1] * 10), 1)
+        # for i in range(numDust):
+        # if robot.id == 1:
+        # pygame.draw.circle(screen, red, (dustLoc[0][i] * 10, dustLoc[1][i] * 10), 13)
+        pygame.draw.line(screen, black, (visitedGrids[i - 1][0] * 10, visitedGrids[i - 1][1] * 10),
+                         (visitedGrids[i][0] * 10, visitedGrids[i][1] * 10), 1)
     robot.areaCovered = numDust
 
 
@@ -317,10 +315,10 @@ def doLocalization(robot: Robot):
     global tick
     global epsilonTP1
     global miuTP1
-    
+
     uT = np.array([robot.speed, robot.angle])
     # addend motion modle error
-    uT = uT + np.array([np.random.normal(0, 1), np.random.normal(0, 0.1)])
+    uT = uT + np.array([np.random.normal(0, 0.1), np.random.normal(0, 0.01)])
 
     # mock, not sure how this is supposed to behave when less than 3 beacons
     zt, inRangeBeacon = poseCalculationReal(beaconList, robot, miuT)
@@ -332,25 +330,34 @@ def doLocalization(robot: Robot):
         print("Beacons in range: " + str(inRangeBeacon))
         print("Estimated epsilonTP1: \n" + str(epsilonTP1))
         print("Estimated muiT+1: \n" + str(miuTP1))
-        print("Real muiT+1: \n" + str([robot.xCoord, robot.yCoord, robot.forwardAngle]))    
+        print("Real muiT+1: \n" + str([robot.xCoord, robot.yCoord, robot.forwardAngle]))
 
 
-def drawEllipse(tick):
+def drawEllipse(tick, robot: Robot):
     global epsilonTP1
     global ellipseHist
     global miuT
-    global miuTP1
-    
+
+
     predictLine = []
     predictLine.append([miuTP1[0], miuTP1[1]])
-    if tick % 100 == 0:
-        ellipseSize = (miuTP1[0], miuTP1[1], epsilonTP1[0,0], epsilonTP1[1,1])
+    #if tick % 100 == 0:
+    ellipseSize = [miuT[0] - 0.5 * epsilonTP1[0, 0], miuT[1] - 0.5 * epsilonTP1[1, 1], epsilonTP1[0, 0], epsilonTP1[1, 1]]
+    # ellipseSize = [miuTP1[0] - 25, miuTP1[0] - 25, 50, 50]
+    if (ellipseSize[2] + ellipseSize[3] > 5 ):
         ellipseHist.append(ellipseSize)
+    else:
+        ellipseHist = []
+
+
     for i in range(1, len(ellipseHist)):
-        pygame.draw.ellipse(screen, green, ellipseHist[i-1], 1)
-        #if i != 1:
+        #print("drawing elli: " + str(ellipseHist[i - 1]))
+        #print("drawing robot xchoord: " + str(robot.xCoord) + ", y: " + str(robot.yCoord))
+        pygame.draw.ellipse(screen, green, ellipseHist[i - 1], 1)
+        # if i != 1:
         #    pygame.draw.line(screen, red, predictLine[i-1], predictLine[i], 1)
-    
+    #print("#######################")
+
 
 init()
 

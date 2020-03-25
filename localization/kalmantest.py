@@ -61,6 +61,9 @@ def poseTracking(deltaTime, uT, zT, miuTminusOne, epsilonTminusOne):
     muiTBar = np.matmul(A, miuTminusOne) + np.matmul(B, uT)
     #print("Prediction2,  muiTBar: " + str(muiTBar))
 
+    if uT[0] < 0.05:
+        return miuTminusOne, epsilonTminusOne
+
     epsilonTBar = np.matmul(A, np.matmul(epsilonTminusOne, np.transpose(A))) + R
     #print("prediction3 epsilonTHat: " + str(epsilonTBar))
     if np.sum(zT) < 0.01:
